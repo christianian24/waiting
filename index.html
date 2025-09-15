@@ -95,71 +95,63 @@
     <span id="span_dt_dt"></span><br>I’ll keep my promise. I’ll be here, waiting for you ♡
 </p>
 <script>
-    // Shared countdown configuration and logic
-    const COUNTDOWN_TARGET_DATE = new Date("2031-02-29T15:34:00+08:00");
+    const COUNTDOWN_TARGET_DATE = new Date("2031-05-26T15:34:00+08:00");
 
     function calculateCountdown(targetDate) {
         const now = new Date();
-        const timeDifference = targetDate.getTime() - now.getTime();
 
-        if (timeDifference <= 0) {
+        if (now >= targetDate) {
             return { years: 0, days: 0, hours: 0, minutes: 0, seconds: 0, isFinished: true };
         }
 
+        // Full calendar years
         let years = targetDate.getFullYear() - now.getFullYear();
-        let tempNow = new Date(now);
-        tempNow.setFullYear(now.getFullYear() + years);
+        let anniversary = new Date(now);
+        anniversary.setFullYear(now.getFullYear() + years);
 
-        if (tempNow > targetDate) {
+        if (anniversary > targetDate) {
             years--;
+            anniversary.setFullYear(now.getFullYear() + years);
         }
 
-        let dateAfterYears = new Date(now);
-        dateAfterYears.setFullYear(now.getFullYear() + years);
+        // Remaining time after full years
+        let remainingMs = targetDate - anniversary;
 
-        const remainingTime = targetDate.getTime() - dateAfterYears.getTime();
+        // Calculate days, hours, minutes, seconds
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const msPerHour = 1000 * 60 * 60;
+        const msPerMinute = 1000 * 60;
+        const msPerSecond = 1000;
 
-        const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+        const days = Math.floor(remainingMs / msPerDay);
+        remainingMs -= days * msPerDay;
+
+        const hours = Math.floor(remainingMs / msPerHour);
+        remainingMs -= hours * msPerHour;
+
+        const minutes = Math.floor(remainingMs / msPerMinute);
+        remainingMs -= minutes * msPerMinute;
+
+        const seconds = Math.floor(remainingMs / msPerSecond);
 
         return { years, days, hours, minutes, seconds, isFinished: false };
     }
 
-    function formatDetailed(count) {
-        return `${count.years} years ${count.days} days ${count.hours} hours ${count.minutes} minutes ${count.seconds} seconds`;
-    }
-
-    function formatSimulate(count) {
-        const hh = String(count.hours).padStart(2, '0');
-        const mm = String(count.minutes).padStart(2, '0');
-        return `${count.years} years ${count.days} days\n${hh}:${mm}`;
-    }
-</script>
-<script>
-    function show_date_time() {
+    function updateCountdownDisplay() {
         const spanElement = document.getElementById("span_dt_dt");
-        let intervalId = null;
+        const count = calculateCountdown(COUNTDOWN_TARGET_DATE);
 
-        function updateCounter() {
-            const count = calculateCountdown(COUNTDOWN_TARGET_DATE);
-
-            if (count.isFinished) {
-                spanElement.innerHTML = "I kept my promise...❤️";
-                if (intervalId) {
-                    clearInterval(intervalId);
-                }
-                return;
-            }
-            spanElement.innerHTML = formatDetailed(count);
+        if (count.isFinished) {
+            spanElement.innerHTML = "I kept my promise...❤️";
+            return;
         }
 
-        // Initial call to display immediately and then update every second.
-        updateCounter();
-        intervalId = setInterval(updateCounter, 1000);
+        spanElement.innerHTML = `${count.years} years ${count.days} days ${count.hours}hours ${count.minutes}minutes ${count.seconds}seconds`;
     }
-    show_date_time();
+
+    // Update every second for live ticking
+    updateCountdownDisplay();
+    setInterval(updateCountdownDisplay, 1000);
 </script>
 <script>
     var S = {
@@ -239,6 +231,12 @@
         function getAction(value) {
             value = value && value.split(' ')[0];
             return value && value[0] === cmd && value.substring(1);
+        }
+
+        function formatSimulate(count) {
+            // Format for the particle simulation, without seconds to update only every minute.
+            // Using two lines for better display.
+            return `${count.years}years ${count.days}days\n${count.hours}hours ${count.minutes}minutes`;
         }
 
         function performAction() {
