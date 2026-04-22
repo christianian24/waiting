@@ -19,50 +19,35 @@ function updateDynamicLighting() {
 updateDynamicLighting();
 setInterval(updateDynamicLighting, 60000); // Check every minute
 
-// --- Custom Cursor & Ripple ---
-const cursor = document.createElement('div');
-cursor.classList.add('custom-cursor');
-document.body.appendChild(cursor);
-
+// --- Interaction State ---
 window.isMouseDown = false;
+let isCursorMoving = false;
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
 
 document.addEventListener('mousemove', (e) => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
+    mouseX = e.clientX;
+    mouseY = e.clientY;
 
-    // Parallax background
-    const x = (e.clientX / window.innerWidth - 0.5) * 20;
-    const y = (e.clientY / window.innerHeight - 0.5) * 20;
-    document.body.style.setProperty('--bg-x', `calc(50% + ${-x}px)`);
-    document.body.style.setProperty('--bg-y', `calc(50% + ${-y}px)`);
-
-    // Create trail
-    if (Math.random() > 0.6) {
-        const trail = document.createElement('div');
-        trail.classList.add('cursor-trail');
-        trail.style.left = e.clientX + 'px';
-        trail.style.top = e.clientY + 'px';
-        document.body.appendChild(trail);
-        setTimeout(() => trail.remove(), 500);
+    if (!isCursorMoving) {
+        isCursorMoving = true;
+        requestAnimationFrame(() => {
+            // Parallax background
+            const x = (mouseX / window.innerWidth - 0.5) * 20;
+            const y = (mouseY / window.innerHeight - 0.5) * 20;
+            document.body.style.setProperty('--bg-x', `calc(50% + ${-x}px)`);
+            document.body.style.setProperty('--bg-y', `calc(50% + ${-y}px)`);
+            isCursorMoving = false;
+        });
     }
 });
 
-document.addEventListener('mousedown', (e) => {
+document.addEventListener('mousedown', () => {
     window.isMouseDown = true;
-    cursor.classList.add('clicking');
-
-    // Create ripple
-    const ripple = document.createElement('div');
-    ripple.classList.add('ripple');
-    ripple.style.left = e.clientX + 'px';
-    ripple.style.top = e.clientY + 'px';
-    document.body.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 800);
 });
 
 document.addEventListener('mouseup', () => {
     window.isMouseDown = false;
-    cursor.classList.remove('clicking');
 });
 
 // --- Countdown Logic ---
@@ -177,7 +162,7 @@ function spawnFallingItem() {
         item.remove();
     }, 11000);
 }
-setInterval(spawnFallingItem, 600); // Spawn a new one every 600ms
+setInterval(spawnFallingItem, 900); // Reduce spawn rate to avoid DOM clutter
 
 // --- Falling Envelope Modal ---
 function spawnEnvelope() {
@@ -219,8 +204,9 @@ function spawnFirefly() {
 
     let angle = Math.random() * Math.PI * 2;
     let speed = Math.random() * 0.5 + 0.2;
+    let floatReq;
 
-    const floatInterval = setInterval(() => {
+    function float() {
         x += Math.cos(angle) * speed;
         y += Math.sin(angle) * speed;
         angle += (Math.random() - 0.5) * 0.2;
@@ -230,18 +216,21 @@ function spawnFirefly() {
 
         firefly.style.left = x + 'px';
         firefly.style.top = y + 'px';
-    }, 50);
+
+        floatReq = requestAnimationFrame(float);
+    }
+    floatReq = requestAnimationFrame(float);
 
     firefly.addEventListener('mousedown', (e) => {
         e.stopPropagation();
-        clearInterval(floatInterval);
+        cancelAnimationFrame(floatReq);
         firefly.classList.add('burst');
         setTimeout(() => firefly.remove(), 500);
     });
 
     setTimeout(() => {
         if (firefly.parentNode) {
-            clearInterval(floatInterval);
+            cancelAnimationFrame(floatReq);
             firefly.style.opacity = '0';
             setTimeout(() => firefly.remove(), 1000);
         }
@@ -562,26 +551,6 @@ S.Dot.prototype = {
         return false;
     },
     _update: function () {
-        if (S.Drawing.mouse) {
-            var distToMouse = this.distanceTo(S.Drawing.mouse, true);
-            var dist = distToMouse[2];
-            var interactionRadius = 120;
-
-            if (dist < interactionRadius && dist > 0) {
-                var force = (interactionRadius - dist) / interactionRadius;
-                var dx = distToMouse[0] / dist;
-                var dy = distToMouse[1] / dist;
-                if (window.isMouseDown) {
-                    // Pull particles towards the mouse
-                    this.p.x -= dx * force * 15;
-                    this.p.y -= dy * force * 15;
-                } else {
-                    // Push particles away
-                    this.p.x += dx * force * 15;
-                    this.p.y += dy * force * 15;
-                }
-            }
-        }
 
         if (this._moveTowards(this.t)) {
             var p = this.q.shift();
@@ -626,7 +595,7 @@ S.Dot.prototype = {
 };
 
 S.ShapeBuilder = (function () {
-    var gap = 9,
+    var gap = 11,
         shapeCanvas = document.createElement('canvas'),
         shapeContext = shapeCanvas.getContext('2d'),
         fontSize = 500,
@@ -908,60 +877,62 @@ timeCapsule.addEventListener('click', (e) => {
     }
 });
 
-// --- Hold to Send Love ---
-let chargeInterval;
-let chargeProgress = 0;
+
+
+// --- Long Hold Secret (Ice Crystal Rain) ---
+let holdInterval;
+let holdProgress = 0;
 const chargeRing = document.getElementById('charge-ring');
+const logoImg = document.getElementById('logo');
 
-function startCharging(e) {
-    if (e.type === 'mousedown') e.preventDefault(); // prevent image drag
-    chargeProgress = 0;
-    chargeRing.style.background = `conic-gradient(#ff80ab 0%, transparent 0)`;
-    chargeInterval = setInterval(() => {
-        chargeProgress += 2;
-        chargeRing.style.background = `conic-gradient(#ff80ab ${chargeProgress}%, transparent 0)`;
-        if (chargeProgress >= 100) {
-            clearInterval(chargeInterval);
-            releaseLove();
+function startHold(e) {
+    if (e.type === 'mousedown') e.preventDefault();
+    holdProgress = 0;
+    chargeRing.style.background = `conic-gradient(rgba(255, 255, 255, 0.5) 0%, transparent 0)`;
+    
+    holdInterval = setInterval(() => {
+        holdProgress += 2;
+        chargeRing.style.background = `conic-gradient(rgba(255, 255, 255, 0.5) ${holdProgress}%, transparent 0)`;
+        
+        if (holdProgress >= 100) {
+            clearInterval(holdInterval);
+            rainIceCrystals();
+            holdProgress = 0;
+            chargeRing.style.background = `conic-gradient(rgba(255, 255, 255, 0.5) 0%, transparent 0)`;
         }
-    }, 50); // 2.5s charge
+    }, 30); // ~3s hold
 }
 
-function stopCharging() {
-    clearInterval(chargeInterval);
-    chargeProgress = 0;
-    chargeRing.style.background = `conic-gradient(#ff80ab 0%, transparent 0)`;
+function stopHold() {
+    clearInterval(holdInterval);
+    holdProgress = 0;
+    if (chargeRing) {
+        chargeRing.style.background = `conic-gradient(rgba(255, 255, 255, 0.5) 0%, transparent 0)`;
+    }
 }
 
-function releaseLove() {
-    const logoEl = document.getElementById("logo");
-    logoEl.style.boxShadow = "0 0 80px #ff80ab";
-    setTimeout(() => {
-        if (logoEl.style.transform !== "rotate(3600deg) scale(1.2)") {
-            logoEl.style.boxShadow = "0 0 35px rgba(129, 212, 250, 0.5)";
-        }
-    }, 1000);
-
-    for (let i = 0; i < 80; i++) {
+function rainIceCrystals() {
+    // Create a burst of snowflakes
+    for (let i = 0; i < 100; i++) {
         setTimeout(() => {
             const item = document.createElement("div");
             item.classList.add("falling-item");
-            item.innerHTML = "💖";
+            const crystals = ["❄", "❅", "❆", "✧", "✶"];
+            item.innerHTML = crystals[Math.floor(Math.random() * crystals.length)];
             item.style.left = Math.random() * 100 + "vw";
-            item.style.animationDuration = Math.random() * 2 + 1 + "s";
-            item.style.fontSize = Math.random() * 30 + 20 + "px";
+            item.style.animationDuration = Math.random() * 3 + 2 + "s";
+            item.style.fontSize = Math.random() * 20 + 15 + "px";
+            item.style.color = "#ffffff";
+            item.style.filter = "drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))";
             item.style.zIndex = "100";
-            item.style.filter = "drop-shadow(0 0 10px rgba(255, 128, 171, 0.8))";
             document.body.appendChild(item);
-            setTimeout(() => { if (item.parentNode) item.remove(); }, 3000);
-        }, i * 15);
+            setTimeout(() => { if (item.parentNode) item.remove(); }, 5000);
+        }, i * 20);
     }
-    stopCharging();
 }
 
-const logoElement = document.getElementById('logo');
-logoElement.addEventListener('mousedown', startCharging);
-logoElement.addEventListener('mouseup', stopCharging);
-logoElement.addEventListener('mouseleave', stopCharging);
-logoElement.addEventListener('touchstart', startCharging, { passive: true });
-logoElement.addEventListener('touchend', stopCharging);
+logoImg.addEventListener('mousedown', startHold);
+logoImg.addEventListener('mouseup', stopHold);
+logoImg.addEventListener('mouseleave', stopHold);
+logoImg.addEventListener('touchstart', startHold, { passive: true });
+logoImg.addEventListener('touchend', stopHold);

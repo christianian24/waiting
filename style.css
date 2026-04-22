@@ -20,8 +20,6 @@ body {
     font-size: 18px;
     line-height: 2;
     letter-spacing: 1.2px;
-    cursor: none;
-    /* Hide default cursor */
 }
 
 /* Time Overlay for Dynamic Lighting */
@@ -131,6 +129,32 @@ img#logo {
 img#logo:hover {
     box-shadow: 0 0 50px #81d4fa;
     transform: rotate(360deg) scale(1.1);
+}
+
+/* Charge Ring */
+.charge-ring-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+}
+
+.charge-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    z-index: 5;
+    pointer-events: none;
+    background: conic-gradient(rgba(255, 255, 255, 0.5) 0%, transparent 0);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+    -webkit-mask-image: radial-gradient(transparent 65%, black 66%);
+    mask-image: radial-gradient(transparent 65%, black 66%);
 }
 
 /* Particle Canvas */
@@ -397,65 +421,7 @@ img#logo:hover {
     opacity: 1;
 }
 
-/* Custom Cursor & Trail */
-.custom-cursor {
-    position: fixed;
-    width: 12px;
-    height: 12px;
-    background: #81d4fa;
-    border-radius: 50%;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    box-shadow: 0 0 10px #81d4fa, 0 0 20px #81d4fa;
-    transition: width 0.1s, height 0.1s, background 0.2s;
-}
 
-.custom-cursor.clicking {
-    width: 8px;
-    height: 8px;
-    background: #ff80ab;
-    box-shadow: 0 0 10px #ff80ab, 0 0 20px #ff80ab;
-}
-
-.cursor-trail {
-    position: fixed;
-    width: 6px;
-    height: 6px;
-    background: #b3e5fc;
-    border-radius: 50%;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    z-index: 9998;
-    opacity: 0.8;
-    animation: fade-trail 0.5s linear forwards;
-}
-
-@keyframes fade-trail {
-    to {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.2);
-    }
-}
-
-/* Ripple Effect */
-.ripple {
-    position: fixed;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 128, 171, 0.8);
-    pointer-events: none;
-    transform: translate(-50%, -50%) scale(0);
-    animation: ripple-anim 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
-    z-index: 90;
-}
-
-@keyframes ripple-anim {
-    to {
-        transform: translate(-50%, -50%) scale(5);
-        opacity: 0;
-        border-width: 0;
-    }
-}
 
 /* Milestones */
 .milestone {
