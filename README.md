@@ -107,7 +107,7 @@ Contributions are welcome to enhance the visual effects or optimize the particle
 
 ## 📜 License
 
-Distributed under the **ISC License**. See `LICENSE` (if applicable) or the `package.json` for more information.
+Distributed under the **ISC License**. See `LICENSE` for more information.
 
 ---
 
