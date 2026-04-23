@@ -43,7 +43,7 @@ No installation or dependencies are required. This is a standalone project that 
 - **Audio Controls**: Hover over the top-right button to reveal the volume slider. Click to toggle background atmosphere.
 - **Avatar Interactions**: Click on the avatar to receive randomized supportive messages. Long-press (3s) to trigger a special visual effect.
 - **Time Capsule**: Located in the bottom-right. It remains locked until the target date is reached.
-- **Secrets**: Try typing specific keywords like `ayuni` or `imissyou` anywhere on the page to unlock hidden animations.
+- **Secrets**: Try typing specific keywords like (`*****` it's a secret lol) or `imissyou` anywhere on the page to unlock hidden animations.
 
 ### Desktop & Mobile
 The project is fully responsive and supports both mouse pointer movement and touch gestures for particle interaction.
