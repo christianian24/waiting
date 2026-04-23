@@ -53,32 +53,33 @@ document.addEventListener('mouseup', () => {
 // --- Countdown Logic ---
 function calculateCountdown(targetDate) {
     const now = new Date();
-
     if (now >= targetDate) {
         return { years: 0, days: 0, hours: 0, minutes: 0, seconds: 0, isFinished: true };
     }
 
     let years = targetDate.getFullYear() - now.getFullYear();
-    let anniversary = new Date(now);
-    anniversary.setFullYear(now.getFullYear() + years);
+    let tempDate = new Date(now);
+    tempDate.setFullYear(now.getFullYear() + years);
 
-    if (anniversary > targetDate) {
+    if (tempDate > targetDate) {
         years--;
-        anniversary.setFullYear(now.getFullYear() + years);
+        tempDate = new Date(now);
+        tempDate.setFullYear(now.getFullYear() + years);
     }
 
-    let remainingMs = targetDate - anniversary;
+    let remainingMs = targetDate.getTime() - tempDate.getTime();
+    
     const msPerDay = 1000 * 60 * 60 * 24;
     const msPerHour = 1000 * 60 * 60;
     const msPerMinute = 1000 * 60;
     const msPerSecond = 1000;
 
     const days = Math.floor(remainingMs / msPerDay);
-    remainingMs -= days * msPerDay;
+    remainingMs %= msPerDay;
     const hours = Math.floor(remainingMs / msPerHour);
-    remainingMs -= hours * msPerHour;
+    remainingMs %= msPerHour;
     const minutes = Math.floor(remainingMs / msPerMinute);
-    remainingMs -= minutes * msPerMinute;
+    remainingMs %= msPerMinute;
     const seconds = Math.floor(remainingMs / msPerSecond);
 
     return { years, days, hours, minutes, seconds, isFinished: false };
@@ -98,6 +99,14 @@ function updateCountdownDisplay() {
 
 updateCountdownDisplay();
 setInterval(updateCountdownDisplay, 1000);
+
+// Force update on tab visibility change to fix drift after backgrounding
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        updateCountdownDisplay();
+        updateProgressBar();
+    }
+});
 
 // --- Progress Bar Logic ---
 function updateProgressBar() {
@@ -241,7 +250,7 @@ setInterval(spawnFirefly, 3000);
 // --- Secret Codes Menu ---
 const SECRETS = {
     "ayuni": triggerSecret,
-    "missyou": () => { document.body.classList.toggle('moody-mode'); }
+    "imissyou": () => { document.body.classList.toggle('moody-mode'); }
 };
 let inputBuffer = "";
 let maxSecretLen = Math.max(...Object.keys(SECRETS).map(s => s.length));
@@ -290,7 +299,7 @@ function triggerSecret() {
 // --- Particle Animation Engine ---
 var S = {
     init: function () {
-        S.Drawing.init('.canvas');
+        S.Drawing.init('#particle-canvas');
         document.body.classList.add('body--ready');
         S.UI.simulate("あゆに❤️|I will wait for you |untilyou say, |Are you still|waiting for me?|#countdown 3|#heart|I love you❤️|#livecountdown");
         S.Drawing.loop(function () {
@@ -326,8 +335,16 @@ S.Drawing = (function () {
                 }, 100);
             });
 
-            canvas.addEventListener('mousemove', function (e) {
+            window.addEventListener('mousemove', function (e) {
                 S.Drawing.mouse = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('touchstart', function (e) {
+                if (e.touches.length > 0) {
+                    S.Drawing.mouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            }, { passive: true });
+            window.addEventListener('touchend', function () {
+                S.Drawing.mouse = null;
             });
             canvas.addEventListener('mouseleave', function () {
                 S.Drawing.mouse = null;
@@ -789,8 +806,17 @@ let isPlaying = false;
 const volumeSlider = document.getElementById('volume-slider');
 if (volumeSlider) {
     audio.volume = volumeSlider.value;
+    const updateVolume = (val) => {
+        audio.volume = val;
+        volumeSlider.setAttribute('aria-valuenow', val);
+        volumeSlider.setAttribute('value', val);
+    };
+    
     volumeSlider.addEventListener('input', (e) => {
-        audio.volume = e.target.value;
+        updateVolume(e.target.value);
+    });
+    volumeSlider.addEventListener('change', (e) => {
+        updateVolume(e.target.value);
     });
 }
 
@@ -831,7 +857,8 @@ const avatarMessages = [
     "You got this!"
 ];
 
-document.getElementById('logo').addEventListener('click', (e) => {
+const avatarBtn = document.getElementById('avatar-btn');
+const handleAvatarInteraction = (e) => {
     e.stopPropagation();
     if (speechBubble.classList.contains('active')) return;
 
@@ -850,6 +877,14 @@ document.getElementById('logo').addEventListener('click', (e) => {
             }, 3000);
         }
     }, 80);
+};
+
+document.getElementById('logo').addEventListener('click', handleAvatarInteraction);
+avatarBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleAvatarInteraction(e);
+    }
 });
 
 // --- Time Capsule ---

@@ -1,147 +1,121 @@
-# I’ll Be Here.
+# I’ll Be Here. 💖
 
-A single-page interactive website featuring a personalized countdown timer with a beautiful particle animation system.
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
-## Preview
-
-[Live Demo](https://christianian24.github.io/waiting/)  
+A sentimental, interactive single-page website featuring a personalized countdown timer, high-precision progress tracking, and immersive particle animations. This project is a dedicated digital space for keeping a promise and counting down to a significant life event.
 
 ---
 
 ## ✨ Features
 
-- **Personalized Countdown:** A live countdown timer that ticks down to a specific target date and time.
-- **Dynamic Particle Animation:** A canvas-based animation where particles form text and shapes. The text sequence is fully customizable.
-- **Dynamic Final Message:** The promise message at the bottom of the page updates automatically when the countdown finishes.
-- **Animated Avatar:** A circular avatar/logo that rotates on hover.
-- **Customizable Background:** Easily change the full-page background image.
-- **Background Music:** An ambient audio track plays on a loop after the user first interacts with the page.
-- **Zero Dependencies:** Built with pure HTML, CSS, and JavaScript—no external frameworks or libraries needed.
-
-## 🚀 Installation & Setup
-
-Since this is a client-side-only project, setup is simple.
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/christianian24/waiting.git
-    ```
-
-2.  **Navigate to the directory:**
-    ```bash
-    cd your-repository-name
-    ```
-
-3.  **Open the file:**
-    Simply open the `index.html` file in your favorite web browser.
-
-    > **Note:** For the best experience (especially with audio playback), it's recommended to serve the file through a local web server, but opening it directly will also work.
-
-## 🔧 Customization Guide
-
-You can easily personalize this project by editing the `index.html` file.
-
-### 1. Target Date
-
-Change the countdown's target date by modifying the `COUNTDOWN_TARGET_DATE` constant. The format is `YYYY-MM-DDTHH:MM:SS+TIMEZONE`.
-
-```html
-<!-- In the first <script> block -->
-<script>
-    const COUNTDOWN_TARGET_DATE = new Date("2031-05-26T15:34:00+08:00");
-    // ...
-</script>
-```
-
-### 2. Background Image
-
-Update the background by changing the `background-image` URL in the CSS `<style>` block. Place your image in the `img/` folder for consistency.
-
-```css
-/* In the <style> block */
-body {
-    background-image: url('img\1.jpg');
-    /* ... */
-}
-```
-
-### 3. Avatar / Logo
-
-Change the avatar by updating the `src` attribute of the `<img>` tag with the `id="logo"`.
-
-```html
-<!-- Inside the <body> tag -->
-<img src="https://media.tenor.com/YX7uvNo4bgEAAAAi/peach-goma-peach-and-goma.gif" id="logo" alt="Avatar">
-```
-
-### 4. Background Music
-
-Replace the music file by changing the `src` attribute in the `<audio>` tag at the bottom of the file. Place your audio file in the `mp3/` folder.
-
-```html
-<!-- At the end of the <body> -->
-<audio loop="loop" id="background_music">
-    <source src="mp3/your-new-song.mp3" type="audio/mpeg" />
-</audio>
-```
-
-### 5. Animation Text Sequence
-
-Modify the text displayed by the particle animation by editing the string inside the `S.UI.simulate()` function call.
-
-- Use a pipe `|` to separate different messages/frames.
-- Use special commands like `#countdown 3` to create a numbered countdown within the animation.
-- The `#livecountdown` command will display the remaining years, days, hours, and minutes.
-
-```javascript
-<script>
-    var S = {
-        init: function () {
-            // ...
-            S.UI.simulate("First Message|Second Message|#countdown 3|Final Message|#livecountdown");
-            // ...
-        }
-    };
-    // ...
-</script>
-```
-
-## 💻 Technologies Used
-
-- **HTML5**
-- **CSS3**
-- **JavaScript (ES6)**
-
-## 🌱 Future Improvements
-
-- **Enhanced Mobile Responsiveness:** Improve the layout and scaling of the canvas and text on smaller mobile devices.
-- **Theme Selector:** Add a toggle to switch between multiple color schemes or background images (e.g., a light/dark mode).
-- **More Shape Animations:** Expand the `S.ShapeBuilder` to include more geometric shapes or even simple SVG path animations.
-
-## 📄 License
-
-This project is licensed under the MIT License.
+- **🎯 Precise Countdown**: A robust timer tracking time elapsed or remaining until a specific target date with second-level accuracy.
+- **📈 Progress Visualization**: A high-precision progress bar (four decimal places) providing real-time feedback on the "wait progress."
+- **✨ Interactive Canvas Particles**: A custom-built particle engine that reacts to mouse movement and touch interaction, creating a mesmerizing backdrop.
+- **🎵 Glassmorphism Audio Interface**: Custom-designed audio controls with smooth volume adjustment and playback persistence across sessions.
+- **🐾 Animated Avatar**: An interactive Peach & Goma avatar with dynamic typing speech bubbles and engagement triggers.
+- **🌙 Dynamic Lighting**: Automatic UI color shifts based on the time of day (Sunrise, Sunset, and Night modes).
+- **🎁 Secret Easter Eggs**: Hidden interactions including a "Time Capsule" lock and secret keyboard commands.
 
 ---
 
-**MIT License**
+## 📸 Screenshots
 
-Copyright (c) 2024 [Your Name or Username]
+![Main Interface](img/Screenshot%202026-04-23%20181210.png)
+*The modern glassmorphism interface with active countdown and particle background.*
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+---
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## 🚀 Getting Started
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+No installation or dependencies are required. This is a standalone project that runs directly in any modern web browser.
+
+### How to Run
+1. Clone or download the project files.
+2. Locate `index.html` in the root directory.
+3. **Double-click `index.html`** or drag it into your browser (Chrome, Edge, Safari, etc.).
+4. Press **F5** or Refresh to reload if needed.
+
+---
+
+## 📖 Usage
+
+### Interaction Guide
+- **Audio Controls**: Hover over the top-right button to reveal the volume slider. Click to toggle background atmosphere.
+- **Avatar Interactions**: Click on the avatar to receive randomized supportive messages. Long-press (3s) to trigger a special visual effect.
+- **Time Capsule**: Located in the bottom-right. It remains locked until the target date is reached.
+- **Secrets**: Try typing specific keywords like `ayuni` or `imissyou` anywhere on the page to unlock hidden animations.
+
+### Desktop & Mobile
+The project is fully responsive and supports both mouse pointer movement and touch gestures for particle interaction.
+
+---
+
+## ⚙️ Configuration
+
+You can personalize the countdown by modifying the configuration constants in `script.js`:
+
+```javascript
+// --- Configuration in script.js ---
+const COUNTDOWN_TARGET_DATE = new Date("2031-05-26T15:34:00+08:00");
+const WAIT_START_DATE = new Date("2024-05-26T00:00:00+08:00");
+```
+
+- **`COUNTDOWN_TARGET_DATE`**: The date you are waiting for.
+- **`WAIT_START_DATE`**: The date the promise or journey began.
+
+---
+
+## 📂 Folder Structure
+
+```text
+waiting/
+├── .testsprite/          # TestSprite configuration
+├── img/                  # Static image assets
+├── mp3/                  # Background music files
+├── testsprite_tests/     # Automated test reports and plans
+├── index.html            # Main entry point
+├── script.js             # Core application logic & particle engine
+├── style.css             # Glassmorphism design system
+├── package.json          # Dependencies and scripts
+└── README.md             # Project documentation
+```
+
+---
+
+## 🧪 Testing
+
+This project can be manually verified by opening the page and interacting with the UI. For automated quality assurance, it is pre-configured for **TestSprite MCP**.
+
+### Run Automated Tests
+If you wish to run the automated test suite, ensure you have Node.js installed and run:
+```bash
+npx @testsprite/testsprite-mcp@latest generateCodeAndExecute
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome to enhance the visual effects or optimize the particle engine.
+1. Fork the Project.
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the Branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
+
+## 📜 License
+
+Distributed under the **ISC License**. See `LICENSE` (if applicable) or the `package.json` for more information.
+
+---
+
+## 💖 Acknowledgments
+
+- **Peach & Goma**: For the adorable animated assets.
+- **Vite**: For the blazing fast development experience.
+- **TestSprite**: For ensuring the reliability of the countdown logic.
+
+---
+*Created with love and a promise. Stay strong. ♡*
