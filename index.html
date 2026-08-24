@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>I’ll Be Here.</title>
+    <link rel="Shortcut Icon" href="https://i.loli.net/2019/02/13/5c62f60e194c3.png" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!--Audio Controls-->
+    <div class="audio-container">
+        <button id="audio-btn" class="audio-controls" title="Toggle Music" aria-label="Toggle Music">
+            <svg viewBox="0 0 24 24">
+                <!-- Default to Muted Icon until interacted -->
+                <path
+                    d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+            </svg>
+        </button>
+        <div class="volume-slider-container">
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" aria-label="Volume Control">
+        </div>
+    </div>
+
+    <!-- Audio Autoplay Prompt Toast -->
+    <div id="audio-prompt-toast" class="audio-prompt-toast">
+        <span class="audio-prompt-icon">🎵</span>
+        <span>Click anywhere to play music</span>
+    </div>
+
+    <!-- Zen Mode Toast Notification -->
+    <div id="zen-toast" class="zen-toast">Zen View Mode • Click anywhere or press H to exit</div>
+
+    <!-- Floating Arrow Trigger Button (Mid-Left) -->
+    <button id="settings-tab" class="settings-arrow-btn" aria-label="Open Settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+        </svg>
+    </button>
+
+    <!-- Centered Settings Modal Overlay & Card -->
+    <div id="settings-overlay" class="settings-overlay"></div>
+    <div id="settings-modal" class="settings-modal-centered">
+        <div class="settings-header">
+            <div class="settings-title">
+                <svg class="settings-gear-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span>SETTINGS</span>
+            </div>
+            <button id="close-settings" class="close-btn" aria-label="Close Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="settings-body-2col">
+            <!-- LEFT COLUMN: SIDEBAR NAVIGATION -->
+            <div class="settings-sidebar-nav">
+                <button class="nav-tab active" data-tab="controls">
+                    <svg class="nav-tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="21" x2="4" y2="14"/>
+                        <line x1="4" y1="10" x2="4" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12" y2="3"/>
+                        <line x1="20" y1="21" x2="20" y2="16"/>
+                        <line x1="20" y1="12" x2="20" y2="3"/>
+                        <line x1="1" y1="14" x2="7" y2="14"/>
+                        <line x1="9" y1="8" x2="15" y2="8"/>
+                        <line x1="17" y1="16" x2="23" y2="16"/>
+                    </svg>
+                    <span>Controls</span>
+                </button>
+                <button class="nav-tab" data-tab="appearance">
+                    <svg class="nav-tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.72 1.7-1.64 0-.43-.17-.83-.44-1.13-.27-.3-.43-.7-.43-1.13 0-.92.72-1.7 1.64-1.7h2.03c3.04 0 5.5-2.46 5.5-5.5 0-5.5-4.5-10-10-10z"/>
+                    </svg>
+                    <span>Appearance</span>
+                </button>
+                <button class="nav-tab" data-tab="memos">
+                    <svg class="nav-tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    <span>Memos & Hints</span>
+                </button>
+            </div>
+
+            <!-- RIGHT COLUMN: CONTENT PANELS -->
+            <div class="settings-content-panels">
+                <!-- TAB 1: CONTROLS & TOGGLES -->
+                <div id="panel-controls" class="tab-panel active">
+                    <!-- Audio & Soundtrack Controls -->
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                            </svg>
+                            <span>Background Audio</span>
+                        </div>
+                        <input type="checkbox" id="toggle-music" class="setting-switch" checked>
+                    </div>
+                    <div class="setting-group-sub">
+                        <span class="setting-sub-label">VOLUME LEVEL</span>
+                        <input type="range" id="volume-slider" class="setting-range" min="0" max="1" step="0.05" value="0.5">
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Volume Fade-In (2s)</span>
+                        </div>
+                        <input type="checkbox" id="toggle-fadein" class="setting-switch" checked>
+                    </div>
+
+                    <!-- Particles Controls -->
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/>
+                            </svg>
+                            <span>Snow & Sparkles</span>
+                        </div>
+                        <input type="checkbox" id="toggle-particles" class="setting-switch" checked>
+                    </div>
+                    <div class="setting-group-sub">
+                        <span class="setting-sub-label">PARTICLE DENSITY</span>
+                        <div class="segmented-btn-group">
+                            <button class="seg-btn active" data-density="low">Low</button>
+                            <button class="seg-btn" data-density="med">Med</button>
+                            <button class="seg-btn" data-density="high">High</button>
+                        </div>
+                    </div>
+                    <div class="setting-group-sub">
+                        <span class="setting-sub-label">FALL SPEED</span>
+                        <div class="segmented-btn-group">
+                            <button class="seg-btn active" data-speed="gentle">Gentle</button>
+                            <button class="seg-btn" data-speed="normal">Normal</button>
+                            <button class="seg-btn" data-speed="quick">Quick</button>
+                        </div>
+                    </div>
+
+                    <!-- Lighting & FX Controls -->
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"/>
+                                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.07l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                            </svg>
+                            <span>Dynamic Lighting</span>
+                        </div>
+                        <input type="checkbox" id="toggle-lighting" class="setting-switch" checked>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Glow Pulse Aura</span>
+                        </div>
+                        <input type="checkbox" id="toggle-glow" class="setting-switch" checked>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Cinematic Edge Vignette</span>
+                        </div>
+                        <input type="checkbox" id="toggle-vignette" class="setting-switch" checked>
+                    </div>
+
+                    <!-- Display View Controls -->
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <span>Zen / Clean View</span>
+                        </div>
+                        <input type="checkbox" id="toggle-zen" class="setting-switch">
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Inactivity Auto-Sleep (5m)</span>
+                        </div>
+                        <input type="checkbox" id="toggle-autosleep" class="setting-switch" checked>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                            <span>Battery Saver (30fps)</span>
+                        </div>
+                        <input type="checkbox" id="toggle-powersave" class="setting-switch" checked>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <svg class="setting-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                            </svg>
+                            <span>Fullscreen</span>
+                        </div>
+                        <input type="checkbox" id="toggle-fullscreen" class="setting-switch">
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Compact Mini-Bar Mode</span>
+                        </div>
+                        <input type="checkbox" id="toggle-minimode" class="setting-switch" checked>
+                    </div>
+                </div>
+
+                <!-- TAB 2: APPEARANCE & FORMAT -->
+                <div id="panel-appearance" class="tab-panel">
+                    <div class="setting-group">
+                        <span class="setting-group-label">ACCENT COLOR</span>
+                        <div class="theme-pills">
+                            <button class="theme-pill active" data-theme="cyan" title="Midnight Cyan" style="--pill-color: #38bdf8;"></button>
+                            <button class="theme-pill" data-theme="rose" title="Rose Sakura" style="--pill-color: #ff80ab;"></button>
+                            <button class="theme-pill" data-theme="purple" title="Amethyst Violet" style="--pill-color: #c084fc;"></button>
+                            <button class="theme-pill" data-theme="emerald" title="Aurora Emerald" style="--pill-color: #34d399;"></button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <span class="setting-group-label">GLASS BLUR STRENGTH</span>
+                        <div class="segmented-btn-group">
+                            <button class="seg-btn" data-blur="subtle">Subtle</button>
+                            <button class="seg-btn active" data-blur="standard">Standard</button>
+                            <button class="seg-btn" data-blur="deep">Deep</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <span class="setting-group-label">TIMER TYPOGRAPHY</span>
+                        <div class="segmented-btn-group">
+                            <button class="font-btn active" data-font="sans">Sans</button>
+                            <button class="font-btn" data-font="serif">Serif</button>
+                            <button class="font-btn" data-font="mono">Mono</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <span class="setting-group-label">TIMER FORMAT</span>
+                        <div class="timer-mode-selector">
+                            <button class="mode-btn active" data-mode="standard">Standard</button>
+                            <button class="mode-btn" data-mode="days">Days</button>
+                            <button class="mode-btn" data-mode="seconds">Seconds</button>
+                            <button class="mode-btn" data-mode="weeks">Weeks</button>
+                            <button class="mode-btn" data-mode="hours">Hours</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <span class="setting-group-label">TIMER DIRECTION</span>
+                        <div class="dir-mode-selector">
+                            <button class="dir-btn active" data-dir="down">Countdown</button>
+                            <button class="dir-btn" data-dir="up">Count Up</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Live Ticking Seconds</span>
+                        </div>
+                        <input type="checkbox" id="toggle-seconds" class="setting-switch" checked>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Milestones Progress Bar</span>
+                        </div>
+                        <input type="checkbox" id="toggle-milestones" class="setting-switch" checked>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Completion Percentage Badge</span>
+                        </div>
+                        <input type="checkbox" id="toggle-percent-badge" class="setting-switch">
+                    </div>
+                </div>
+
+                <!-- TAB 3: MEMOS & HINTS -->
+                <div id="panel-memos" class="tab-panel">
+                    <div class="setting-shortcuts-card quote-card">
+                        <div class="quote-header">
+                            <span class="shortcuts-title">DAILY LOVE MEMO</span>
+                            <button id="next-quote-btn" class="mini-icon-btn" title="New Quote">
+                                <svg class="quote-refresh-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"/>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="daily-quote-text" class="quote-text">"Every second with you is a memory I'll treasure forever."</div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Auto-Rotate Quotes (30s)</span>
+                        </div>
+                        <input type="checkbox" id="toggle-auto-quote" class="setting-switch" checked>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>UI Click Sound Effects</span>
+                        </div>
+                        <input type="checkbox" id="toggle-click-sound" class="setting-switch" checked>
+                    </div>
+
+                    <div class="action-btn-row">
+                        <button id="export-snapshot-btn" class="qol-action-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <span>Export Snapshot</span>
+                        </button>
+                        <button id="reset-prefs-btn" class="qol-action-btn danger">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                <path d="M3 3v5h5"/>
+                            </svg>
+                            <span>Reset Settings</span>
+                        </button>
+                    </div>
+
+                    <div class="setting-shortcuts-card">
+                        <div class="shortcuts-title">KEYBOARD HOTKEYS</div>
+                        <div class="shortcut-row"><span>Toggle Settings</span> <kbd>S</kbd></div>
+                        <div class="shortcut-row"><span>Mute Audio</span> <kbd>M</kbd></div>
+                        <div class="shortcut-row"><span>Zen View</span> <kbd>H</kbd></div>
+                        <div class="shortcut-row"><span>Fullscreen</span> <kbd>F</kbd></div>
+                    </div>
+
+                    <div class="setting-shortcuts-card hints-card">
+                        <div class="shortcuts-title">SECRET HINTS</div>
+                        <div class="hint-row">• Hold avatar 3s for crystal rain</div>
+                        <div class="hint-row">• Type <code>imissyou</code> for moody mode</div>
+                        <div class="hint-row">• Type <code>*****</code> for secret love message</div>
+                    </div>
+
+                    <div class="setting-info-card">
+                        <svg class="target-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <div class="target-info-text">
+                            <span class="target-title">COUNTDOWN TARGET</span>
+                            <span class="target-date">May 26, 2031 ♡</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Avatar-->
+    <div class="avatar-container">
+        <div id="avatar-speech" class="speech-bubble"></div>
+        <div class="charge-ring-container" id="avatar-btn" role="button" tabindex="0" aria-label="Interact with Avatar">
+            <div id="charge-ring" class="charge-ring"></div>
+            <img src="https://media.tenor.com/YX7uvNo4bgEAAAAi/peach-goma-peach-and-goma.gif" id="logo" alt="Avatar">
+        </div>
+    </div>
+
+    <!--Particle Canvas-->
+    <canvas id="particle-canvas" class="canvas" width="1820" height="905" role="img"
+        aria-label="Interactive particle background" tabindex="0"></canvas>
+
+    <!-- Vignette Edge Overlay -->
+    <div id="vignette-overlay" class="vignette-overlay"></div>
+
+    <!--Countdown Text-->
+    <div class="text timer-compact-pill">
+        <!-- Floating Love Memo Pill -->
+        <div id="floating-love-memo" class="floating-love-memo">
+            <span id="typewriter-text" class="typewriter-text"></span>
+        </div>
+
+        <div class="timer-inline-bar">
+            <span class="timer-label-tag">FOR:</span>
+            <div class="timer-segment">
+                <span id="timer-years" class="timer-num">0</span><span class="timer-lbl">y</span>
+            </div>
+            <span class="timer-sep">•</span>
+            <div class="timer-segment">
+                <span id="timer-days" class="timer-num">0</span><span class="timer-lbl">d</span>
+            </div>
+            <span class="timer-sep">•</span>
+            <div class="timer-segment">
+                <span id="timer-hours" class="timer-num">00</span><span class="timer-lbl">h</span>
+            </div>
+            <span class="timer-sep">•</span>
+            <div class="timer-segment">
+                <span id="timer-minutes" class="timer-num">00</span><span class="timer-lbl">m</span>
+            </div>
+            <span class="timer-sep" id="timer-sec-sep">•</span>
+            <div class="timer-segment" id="timer-sec-segment">
+                <span id="timer-seconds" class="timer-num">00</span><span class="timer-lbl">s</span>
+            </div>
+        </div>
+        <div id="percent-badge-pill" class="percent-badge-pill">24.6500% Completed</div>
+        <p class="promise-subtext">I’ll keep my promise. I’ll be here, waiting for you <span class="heart-icon">♡</span>
+        </p>
+        <span id="span_dt_dt" style="display: none;"></span>
+    </div>
+
+    <!-- Progress Bar Widget -->
+    <div class="progress-widget">
+        <div class="progress-container" title="The Wait Progress">
+            <div class="progress-bar" id="progress-bar">
+                <div class="progress-glow-head"></div>
+            </div>
+        </div>
+        <div class="progress-badge" title="Wait Progress Percentage">
+            <span class="pulse-dot"></span>
+            <span id="progress-text">0.0000%</span>
+        </div>
+    </div>
+
+    <!-- Time Capsule -->
+    <div id="time-capsule" class="time-capsule" title="Time Capsule">
+        <span>🔒︎</span>
+        <div class="tooltip" id="time-capsule-tooltip">Not yet...</div>
+    </div>
+
+    <!-- Secret Modal Easter Egg -->
+    <div class="secret-modal" id="secret-modal">
+        <h2>You found me! ♡</h2>
+        <p>You unlocked the secret message.<br>I will love you and keep my promise.</p>
+    </div>
+
+    <!-- Envelope Modal -->
+    <div class="secret-modal" id="envelope-modal">
+        <h2>Hello La,</h2>
+        <p>I’m thinking of you every second, even if you don’t know it.... I'll always be here for you, waiting.</p>
+    </div>
+
+    <!-- Memory Snapshot Modal -->
+    <div id="snapshot-modal" class="snapshot-modal-overlay">
+        <div class="snapshot-card">
+            <div class="snapshot-header">
+                <h3>MEMORIES SNAPSHOT</h3>
+                <button id="close-snapshot" class="close-btn">&times;</button>
+            </div>
+            <div class="snapshot-body">
+                <img src="https://media.tenor.com/YX7uvNo4bgEAAAAi/peach-goma-peach-and-goma.gif" alt="Avatar" class="snapshot-avatar">
+                <div id="snapshot-timer-text" class="snapshot-timer">0y • 0d • 00h • 00m • 00s</div>
+                <div id="snapshot-date" class="snapshot-date">May 26, 2031 ♡</div>
+                <p class="snapshot-promise">"I'll keep my promise. I'll be here, waiting for you ♡"</p>
+            </div>
+        </div>
+    </div>
+
+    <!--Audio-->
+    <audio loop="loop" autoplay="autoplay" id="background_music">
+        <source src="mp3/waiting.mp3" type="audio/mpeg" />
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
