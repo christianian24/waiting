@@ -480,10 +480,23 @@ S.Drawing = (function () {
 
 S.UI = (function () {
     var interval,
+        actionTimeout,
         time,
         maxShapeSize = 30,
         sequence = [],
-        cmd = '#';
+        cmd = '#',
+        isPlayingCustomNote = false;
+
+    function clearTimers() {
+        if (interval) {
+            clearInterval(interval);
+            interval = null;
+        }
+        if (actionTimeout) {
+            clearTimeout(actionTimeout);
+            actionTimeout = null;
+        }
+    }
 
     function formatTime(date) {
         var h = date.getHours(),
@@ -506,6 +519,8 @@ S.UI = (function () {
     }
 
     function performAction() {
+        if (isPlayingCustomNote) return;
+
         if (sequence.length === 0) {
             return;
         }
@@ -518,9 +533,10 @@ S.UI = (function () {
             case 'countdown':
                 var count = parseInt(value) || 3;
                 function doCountdown(index) {
+                    if (isPlayingCustomNote) return;
                     if (index > 0) {
                         S.Shape.switchShape(S.ShapeBuilder.letter(index), true);
-                        setTimeout(function () { doCountdown(index - 1); }, 1000);
+                        actionTimeout = setTimeout(function () { doCountdown(index - 1); }, 1000);
                     } else {
                         performAction();
                     }
@@ -532,30 +548,31 @@ S.UI = (function () {
                 value = value && value.split('x');
                 value = (value && value.length === 2) ? value : [maxShapeSize, maxShapeSize / 2];
                 S.Shape.switchShape(S.ShapeBuilder.rectangle(Math.min(maxShapeSize, parseInt(value[0])), Math.min(maxShapeSize, parseInt(value[1]))));
-                setTimeout(performAction, 2000);
+                actionTimeout = setTimeout(performAction, 2000);
                 break;
 
             case 'circle':
                 value = parseInt(value) || maxShapeSize;
                 value = Math.min(value, maxShapeSize);
                 S.Shape.switchShape(S.ShapeBuilder.circle(value));
-                setTimeout(performAction, 2000);
+                actionTimeout = setTimeout(performAction, 2000);
                 break;
 
             case 'heart':
                 S.Shape.switchShape(S.ShapeBuilder.heart());
-                setTimeout(performAction, 3000);
+                actionTimeout = setTimeout(performAction, 3000);
                 break;
 
             case 'time':
                 var t = formatTime(new Date());
                 S.Shape.switchShape(S.ShapeBuilder.letter(t));
                 if (sequence.length > 0) {
-                    setTimeout(performAction, 2000);
+                    actionTimeout = setTimeout(performAction, 2000);
                 } else {
                     time = t;
-                    clearInterval(interval);
+                    clearTimers();
                     interval = setInterval(function () {
+                        if (isPlayingCustomNote) return;
                         t = formatTime(new Date());
                         if (t !== time) {
                             time = t;
@@ -566,7 +583,7 @@ S.UI = (function () {
                 break;
 
             case 'livecountdown':
-                clearInterval(interval);
+                clearTimers();
                 const startDate = new Date("2025-02-29T15:34:00+08:00");
                 let lastSimulateString = "";
 
@@ -581,13 +598,14 @@ S.UI = (function () {
                 }
 
                 function updateCountdown() {
+                    if (isPlayingCustomNote) return;
                     const countdownStr = getCountdownString();
                     if (countdownStr !== lastSimulateString) {
                         S.Shape.switchShape(S.ShapeBuilder.letter(countdownStr));
                         lastSimulateString = countdownStr;
                     }
                     if (new Date() >= COUNTDOWN_TARGET_DATE) {
-                        clearInterval(interval);
+                        clearTimers();
                     }
                 }
 
@@ -597,15 +615,60 @@ S.UI = (function () {
 
             default:
                 S.Shape.switchShape(S.ShapeBuilder.letter(current));
-                setTimeout(performAction, 2000);
+                actionTimeout = setTimeout(performAction, 2000);
                 break;
         }
     }
 
     return {
         simulate: function (action) {
+            isPlayingCustomNote = false;
+            clearTimers();
             sequence = action.split('|');
             performAction();
+        },
+        playNote: function (slides, onComplete) {
+            isPlayingCustomNote = true;
+            clearTimers();
+            sequence = [];
+
+            let index = 0;
+
+            function runSlide() {
+                if (!isPlayingCustomNote) return;
+
+                if (index >= slides.length) {
+                    isPlayingCustomNote = false;
+                    if (typeof onComplete === 'function') {
+                        onComplete();
+                    }
+                    // Smooth transition back to live countdown
+                    S.UI.simulate("#livecountdown");
+                    return;
+                }
+
+                const slide = slides[index];
+                if (slide.type === 'heart') {
+                    S.Shape.switchShape(S.ShapeBuilder.heart());
+                } else {
+                    S.Shape.switchShape(S.ShapeBuilder.letter(slide.text));
+                }
+
+                index++;
+                actionTimeout = setTimeout(runSlide, slide.duration || 5000);
+            }
+
+            runSlide();
+        },
+        stopNote: function () {
+            if (isPlayingCustomNote) {
+                isPlayingCustomNote = false;
+                clearTimers();
+                S.UI.simulate("#livecountdown");
+            }
+        },
+        isNotePlaying: function () {
+            return isPlayingCustomNote;
         }
     };
 }());
@@ -1153,7 +1216,7 @@ function unlockAudioOnFirstClick(e) {
         if (typeof playAudioWithFadeIn === 'function') {
             playAudioWithFadeIn();
         } else {
-            audioElem.play().catch(() => {});
+            audioElem.play().catch(() => { });
         }
         hasAudioUnlocked = true;
         setAudioState(true);
@@ -1286,8 +1349,17 @@ document.addEventListener('keydown', (e) => {
     } else if (key === 'f') {
         e.preventDefault();
         toggleFullscreen();
+    } else if (key === 'l') {
+        e.preventDefault();
+        if (S.UI.isNotePlaying && S.UI.isNotePlaying()) {
+            stopLoveNotePlayback();
+        } else {
+            startLoveNotePlayback();
+        }
     } else if (key === 'escape') {
-        if (settingsModal && settingsModal.classList.contains('open')) {
+        if (S.UI.isNotePlaying && S.UI.isNotePlaying()) {
+            stopLoveNotePlayback();
+        } else if (settingsModal && settingsModal.classList.contains('open')) {
             toggleSettingsModal(false);
         } else if (document.body.classList.contains('zen-mode')) {
             setZenMode(false);
@@ -1335,9 +1407,9 @@ function setTheme(theme) {
 
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        document.documentElement.requestFullscreen().catch(() => { });
     } else {
-        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => { });
     }
 }
 
@@ -1384,7 +1456,7 @@ function playClickSound() {
         gain.connect(ctx.destination);
         osc.start();
         osc.stop(ctx.currentTime + 0.08);
-    } catch (e) {}
+    } catch (e) { }
 }
 
 document.addEventListener('click', (e) => {
@@ -1420,9 +1492,9 @@ function playAudioWithFadeIn() {
                     audioElem.volume = vol;
                 }
             }, 80);
-        }).catch(() => {});
+        }).catch(() => { });
     } else {
-        audioElem.play().catch(() => {});
+        audioElem.play().catch(() => { });
     }
 }
 
@@ -1732,7 +1804,7 @@ function saveQoLPreferences() {
             clickSound: isClickSoundEnabled
         };
         localStorage.setItem('user_qol_prefs', JSON.stringify(prefs));
-    } catch (e) {}
+    } catch (e) { }
 }
 
 function loadQoLPreferences() {
@@ -1837,7 +1909,7 @@ function loadQoLPreferences() {
         if (prefs.music) {
             setAudioState(true);
         }
-    } catch (e) {}
+    } catch (e) { }
 }
 
 if (volumeSlider) volumeSlider.addEventListener('change', saveQoLPreferences);
@@ -1845,3 +1917,149 @@ if (toggleParticlesCb) toggleParticlesCb.addEventListener('change', saveQoLPrefe
 if (toggleLightingCb) toggleLightingCb.addEventListener('change', saveQoLPreferences);
 
 setTimeout(loadQoLPreferences, 100);
+
+// ==========================================================================
+// HEARTFELT LOVE NOTE PARTICLE PLAYBACK SYSTEM
+// ==========================================================================
+const LOVE_NOTE_SLIDES = [
+
+    // INTRO — gentle, personal
+    { text: "I love her", duration: 3000 },
+    { text: "but", duration: 2200 },
+    { text: "I know\nmy place.", duration: 4200 },
+
+    // PART 2 — explaining the feeling
+    { text: "I know that,\nsometimes,", duration: 3600 },
+    { text: "loving\nsomeone", duration: 3000 },
+    { text: "doesn't mean", duration: 2700 },
+    { text: "reaching for\ntheir hand.", duration: 4200 },
+
+    { text: "Sometimes\nit means", duration: 2800 },
+    { text: "admiring them\nquietly,", duration: 4000 },
+    { text: "from a\ndistance", duration: 3300 },
+    { text: "that doesn't\nmake them", duration: 3400 },
+    { text: "uncomfortable.", duration: 4600 },
+
+    // PART 3 — more serious / restrained
+    { text: "I know", duration: 2400 },
+    { text: "I cannot\ndemand", duration: 3400 },
+    { text: "her time,", duration: 2800 },
+    { text: "her attention,", duration: 3000 },
+    { text: "or a place", duration: 2800 },
+    { text: "in her\nheart.", duration: 4000 },
+
+    { text: "I cannot\nmake myself", duration: 3600 },
+    { text: "important", duration: 2800 },
+    { text: "in a story", duration: 3000 },
+    { text: "where she\nnever asked me", duration: 4000 },
+    { text: "to be a\ncharacter.", duration: 4200 },
+
+    // PART 4 — emotional pause
+    { text: "And still,", duration: 3200 },
+    { text: "I care.", duration: 4200 },
+
+    { text: "I care enough", duration: 3000 },
+    { text: "to respect", duration: 2700 },
+    { text: "her choices,", duration: 3200 },
+    { text: "even when\nthey're not", duration: 3500 },
+    { text: "the choices", duration: 2700 },
+    { text: "I hoped for.", duration: 4200 },
+
+    { text: "I care\nenough", duration: 3000 },
+    { text: "to let\nher have", duration: 3300 },
+    { text: "her own\nhappiness,", duration: 3600 },
+    { text: "even when", duration: 2800 },
+    { text: "I'm not\npart of it.", duration: 4300 },
+
+    // PART 5 — slower, reflective
+    { text: "Maybe that's", duration: 3000 },
+    { text: "the hardest\npart", duration: 3500 },
+    { text: "of loving\nsomeone:", duration: 4200 },
+
+    { text: "accepting", duration: 3000 },
+    { text: "that your\nfeelings", duration: 3500 },
+    { text: "can be\nsincere", duration: 3400 },
+    { text: "without\ngiving you", duration: 3600 },
+    { text: "ownership", duration: 3000 },
+    { text: "over their\nheart.", duration: 4400 },
+
+    // PART 6 — calm acceptance
+    { text: "So\nI'll stay", duration: 3000 },
+    { text: "where I\nbelong", duration: 3500 },
+    { text: "close\nenough", duration: 2800 },
+    { text: "to wish\nher well,", duration: 3600 },
+    { text: "far enough", duration: 3000 },
+    { text: "to let her\nbreathe.", duration: 4400 },
+
+    // PART 7 — hopeful
+    { text: "And if\none day", duration: 3200 },
+    { text: "she looks\nmy way,", duration: 3500 },
+    { text: "I'll be\ngrateful.", duration: 4300 },
+
+    { text: "If she\ndoesn't,", duration: 3300 },
+    { text: "I'll still\nbe grateful", duration: 3700 },
+    { text: "that I got\nto know", duration: 3500 },
+    { text: "what it\nfeels like", duration: 3400 },
+    { text: "to care for\nsomeone", duration: 3600 },
+    { text: "this deeply.", duration: 4400 },
+
+    // PART 8 — IMPORTANT MESSAGE
+    { text: "Because", duration: 3000 },
+    { text: "I don't need", duration: 3600 },
+    { text: "to be chosen", duration: 3200 },
+    { text: "to know", duration: 2800 },
+    { text: "that my love\nwas real.", duration: 4800 },
+
+    // PART 9 — final realization
+    { text: "I just need", duration: 3000 },
+    { text: "to make sure", duration: 3000 },
+    { text: "that while\nloving her,", duration: 3700 },
+    { text: "I never\nforget", duration: 3300 },
+    { text: "to respect\nher.", duration: 4600 },
+
+    // ENDING — slow it down
+    { text: "I love her.", duration: 4000 },
+    { text: "And that's\nenough.", duration: 5200 },
+
+    // HEART — let it breathe
+    { type: 'heart', duration: 5000 }
+
+];
+
+const playLoveNoteBtn = document.getElementById('play-love-note-btn');
+const notePlaybackPill = document.getElementById('note-playback-pill');
+const noteReturnBtn = document.getElementById('note-return-btn');
+
+function startLoveNotePlayback() {
+    playClickSound();
+    toggleSettingsModal(false);
+
+    document.body.classList.add('playing-love-note');
+    if (notePlaybackPill) notePlaybackPill.classList.add('active');
+
+    S.UI.playNote(LOVE_NOTE_SLIDES, () => {
+        document.body.classList.remove('playing-love-note');
+        if (notePlaybackPill) notePlaybackPill.classList.remove('active');
+    });
+}
+
+function stopLoveNotePlayback() {
+    playClickSound();
+    document.body.classList.remove('playing-love-note');
+    if (notePlaybackPill) notePlaybackPill.classList.remove('active');
+    S.UI.stopNote();
+}
+
+if (playLoveNoteBtn) {
+    playLoveNoteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startLoveNotePlayback();
+    });
+}
+
+if (noteReturnBtn) {
+    noteReturnBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        stopLoveNotePlayback();
+    });
+}
