@@ -940,6 +940,7 @@ body.moody-mode .falling-item {
     padding: 20px 24px;
     color: #ffffff;
     isolation: isolate;
+    contain: layout;
     will-change: transform, opacity;
 }
 

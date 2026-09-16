@@ -1154,6 +1154,7 @@ const closeSettingsBtn = document.getElementById('close-settings');
 const toggleMusicCb = document.getElementById('toggle-music');
 const toggleParticlesCb = document.getElementById('toggle-particles');
 const toggleLightingCb = document.getElementById('toggle-lighting');
+let deepNotesLibraryRendered = false;
 
 function toggleSettingsModal(open) {
     if (!settingsModal || !settingsBtn) return;
@@ -1161,7 +1162,10 @@ function toggleSettingsModal(open) {
     const shouldOpen = open !== undefined ? open : !isCurrentlyOpen;
 
     if (shouldOpen) {
-        renderDeepNotesLibrary();
+        if (!deepNotesLibraryRendered) {
+            renderDeepNotesLibrary();
+            deepNotesLibraryRendered = true;
+        }
         settingsModal.classList.add('open');
         if (settingsOverlay) settingsOverlay.classList.add('open');
         settingsBtn.classList.add('hidden');
