@@ -91,12 +91,20 @@
                 <button class="nav-tab" data-tab="memos">
                     <svg class="nav-tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                     </svg>
-                    <span>Memos & Hints</span>
+                    <span>Love Memos</span>
+                </button>
+                <button class="nav-tab" data-tab="hints">
+                    <svg class="nav-tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18h6" />
+                        <path d="M10 22h4" />
+                        <path
+                            d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" />
+                    </svg>
+                    <span>Tips & Hints</span>
                 </button>
             </div>
 
@@ -305,7 +313,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: MEMOS & HINTS -->
+                <!-- TAB 3: LOVE MEMOS & NOTES -->
                 <div id="panel-memos" class="tab-panel">
                     <div class="setting-shortcuts-card quote-card">
                         <div class="quote-header">
@@ -320,6 +328,21 @@
                         </div>
                         <div id="daily-quote-text" class="quote-text">"Every second with you is a memory I'll treasure
                             forever."</div>
+                    </div>
+
+                    <div class="setting-shortcuts-card love-note-card">
+                        <div class="quote-header">
+                            <span class="shortcuts-title">SPECIAL DEEP NOTES</span>
+                            <span class="pulse-heart-emoji">♡</span>
+                        </div>
+
+                        <p class="love-note-description">
+                            Choose something you'd like to hear.
+                        </p>
+
+                        <div id="deep-notes-list" class="deep-notes-list">
+                            <!-- Populated dynamically from DEEP_NOTES library -->
+                        </div>
                     </div>
 
                     <div class="setting-item">
@@ -355,52 +378,10 @@
                             <span>Reset Settings</span>
                         </button>
                     </div>
+                </div>
 
-                    <div class="setting-shortcuts-card love-note-card">
-                        <div class="quote-header">
-                            <span class="shortcuts-title">SPECIAL DEEP NOTE</span>
-                            <span class="pulse-heart-emoji">♡</span>
-                        </div>
-
-                        <p class="love-note-description">
-                            Play a slow, Deep message in particles in place of the timer.
-                        </p>
-
-                        <button id="play-love-note-btn" class="qol-action-btn love-note-trigger-btn">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"
-                                xmlns="http://www.w3.org/2000/svg">
-
-                                <path d="M12 5.5
-                                C10.8 3.8 9.3 3 7.5 3
-                                C4.4 3 2 5.4 2 8.5
-                                C2 12.1 5.2 15.1 10.5 20
-                                L12 21.4
-                                L10.8 17.2
-                                L12 14.8
-                                L10.5 12
-                                L12 9.5
-                                L10.8 7
-                                Z" />
-
-                                <path d="M12 5.5
-                                C13.2 3.8 14.7 3 16.5 3
-                                C19.6 3 22 5.4 22 8.5
-                                C22 12.1 18.8 15.1 13.5 20
-                                L12 21.4
-                                L13.2 17.2
-                                L12 14.8
-                                L13.5 12
-                                L12 9.5
-                                L13.2 7
-                                Z" />
-
-                            </svg>
-
-                            <span>Play Deep message Note</span>
-                        </button>
-                    </div>
-
-
+                <!-- TAB 4: TIPS & HINTS -->
+                <div id="panel-hints" class="tab-panel">
                     <div class="setting-shortcuts-card">
                         <div class="shortcuts-title">KEYBOARD HOTKEYS</div>
                         <div class="shortcut-row"><span>Toggle Settings</span> <kbd>S</kbd></div>
@@ -411,10 +392,12 @@
                     </div>
 
                     <div class="setting-shortcuts-card hints-card">
-                        <div class="shortcuts-title">SECRET HINTS</div>
+                        <div class="shortcuts-title">TIPS & SECRET HINTS</div>
                         <div class="hint-row">• Hold avatar 3s for crystal rain</div>
                         <div class="hint-row">• Type <code>imissyou</code> for moody mode</div>
                         <div class="hint-row">• Type <code>*****</code> for secret love message</div>
+                        <div class="hint-row">• Tap avatar for cute love messages</div>
+                        <div class="hint-row">• Click anywhere on screen for sparkles</div>
                     </div>
 
                     <div class="setting-info-card">
@@ -545,9 +528,10 @@
 
     <!--Audio-->
     <audio loop="loop" autoplay="autoplay" id="background_music">
-        <source src="mp3/waiting.mp3" type="audio/mpeg" />
+        <source src="mp3/Grand_Escape.mp3" type="audio/mpeg" />
     </audio>
 
+    <script src="deepNotes.js"></script>
     <script src="script.js"></script>
 </body>
 

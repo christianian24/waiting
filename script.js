@@ -26,6 +26,7 @@ let mouseX = window.innerWidth / 2;
 let mouseY = window.innerHeight / 2;
 
 document.addEventListener('mousemove', (e) => {
+    if (settingsModal && settingsModal.classList.contains('open')) return;
     mouseX = e.clientX;
     mouseY = e.clientY;
 
@@ -187,10 +188,16 @@ updateCountdownDisplay();
 setInterval(updateCountdownDisplay, 1000);
 
 // Force update on tab visibility change to fix drift after backgrounding
+var fireflyAnimationControllers = new Set();
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
+        if (typeof S !== 'undefined' && S.Drawing) S.Drawing.loop();
+        fireflyAnimationControllers.forEach(controller => controller.resume());
         updateCountdownDisplay();
         updateProgressBar();
+    } else {
+        if (typeof S !== 'undefined' && S.Drawing) S.Drawing.pause();
+        fireflyAnimationControllers.forEach(controller => controller.pause());
     }
 });
 
@@ -316,8 +323,43 @@ function spawnFirefly() {
     let angle = Math.random() * Math.PI * 2;
     let speed = Math.random() * 0.5 + 0.2;
     let floatReq;
+    let isActive = true;
+    let isPaused = false;
+
+    function pauseFirefly() {
+        if (!isActive) return;
+        isPaused = true;
+        if (floatReq !== undefined && floatReq !== null) {
+            cancelAnimationFrame(floatReq);
+            floatReq = null;
+        }
+    }
+
+    function resumeFirefly() {
+        if (!isActive || !isPaused) return;
+        isPaused = false;
+        floatReq = requestAnimationFrame(float);
+    }
+
+    function stopFirefly() {
+        isActive = false;
+        isPaused = false;
+        if (floatReq !== undefined && floatReq !== null) cancelAnimationFrame(floatReq);
+        floatReq = null;
+        fireflyAnimationControllers.delete(fireflyController);
+    }
+
+    const fireflyController = {
+        pause: pauseFirefly,
+        resume: resumeFirefly
+    };
+    fireflyAnimationControllers.add(fireflyController);
 
     function float() {
+        if (document.hidden || !isActive || isPaused) {
+            floatReq = null;
+            return;
+        }
         x += Math.cos(angle) * speed;
         y += Math.sin(angle) * speed;
         angle += (Math.random() - 0.5) * 0.2;
@@ -334,14 +376,14 @@ function spawnFirefly() {
 
     firefly.addEventListener('mousedown', (e) => {
         e.stopPropagation();
-        cancelAnimationFrame(floatReq);
+        stopFirefly();
         firefly.classList.add('burst');
         setTimeout(() => firefly.remove(), 500);
     });
 
     setTimeout(() => {
         if (firefly.parentNode) {
-            cancelAnimationFrame(floatReq);
+            stopFirefly();
             firefly.style.opacity = '0';
             setTimeout(() => firefly.remove(), 1000);
         }
@@ -414,13 +456,14 @@ S.Drawing = (function () {
     var canvas,
         context,
         renderFn,
+        animFrameId = null,
         requestFrame = window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame ||
             window.oRequestAnimationFrame ||
             window.msRequestAnimationFrame ||
             function (callback) {
-                window.setTimeout(callback, 1000 / 60);
+                return window.setTimeout(callback, 1000 / 60);
             };
     return {
         mouse: null,
@@ -438,9 +481,14 @@ S.Drawing = (function () {
             });
 
             window.addEventListener('mousemove', function (e) {
+                if (settingsModal && settingsModal.classList.contains('open') && settingsModal.contains(e.target)) {
+                    S.Drawing.mouse = null;
+                    return;
+                }
                 S.Drawing.mouse = { x: e.clientX, y: e.clientY };
             });
             window.addEventListener('touchstart', function (e) {
+                if (settingsModal && settingsModal.classList.contains('open') && settingsModal.contains(e.target)) return;
                 if (e.touches.length > 0) {
                     S.Drawing.mouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                 }
@@ -453,10 +501,23 @@ S.Drawing = (function () {
             });
         },
         loop: function (fn) {
-            renderFn = !renderFn ? fn : renderFn;
-            this.clearFrame();
-            renderFn();
-            requestFrame.call(window, this.loop.bind(this));
+            if (fn) renderFn = fn;
+            if (animFrameId) return;
+
+            var self = this;
+            function step() {
+                self.clearFrame();
+                if (renderFn) renderFn();
+                animFrameId = requestFrame.call(window, step);
+            }
+
+            animFrameId = requestFrame.call(window, step);
+        },
+        pause: function () {
+            if (animFrameId !== null) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+            }
         },
         adjustCanvas: function () {
             canvas.width = window.innerWidth;
@@ -779,9 +840,9 @@ S.Dot.prototype = {
 S.ShapeBuilder = (function () {
     var gap = 11,
         shapeCanvas = document.createElement('canvas'),
-        shapeContext = shapeCanvas.getContext('2d'),
+        shapeContext = shapeCanvas.getContext('2d', { willReadFrequently: true }),
         fontSize = 500,
-        fontFamily = 'Quicksand, Helvetica Neue, Helvetica, Arial, sans-serif';
+        fontFamily = 'Plus Jakarta Sans, Helvetica Neue, Helvetica, Arial, sans-serif';
     function fit() {
         shapeCanvas.width = Math.floor(window.innerWidth / gap) * gap;
         shapeCanvas.height = Math.floor(window.innerHeight / gap) * gap;
@@ -1100,13 +1161,16 @@ function toggleSettingsModal(open) {
     const shouldOpen = open !== undefined ? open : !isCurrentlyOpen;
 
     if (shouldOpen) {
+        renderDeepNotesLibrary();
         settingsModal.classList.add('open');
         if (settingsOverlay) settingsOverlay.classList.add('open');
         settingsBtn.classList.add('hidden');
+        document.body.classList.add('settings-open');
     } else {
         settingsModal.classList.remove('open');
         if (settingsOverlay) settingsOverlay.classList.remove('open');
         settingsBtn.classList.remove('hidden');
+        document.body.classList.remove('settings-open');
     }
 }
 
@@ -1354,7 +1418,10 @@ document.addEventListener('keydown', (e) => {
         if (S.UI.isNotePlaying && S.UI.isNotePlaying()) {
             stopLoveNotePlayback();
         } else {
-            startLoveNotePlayback();
+            const library = getEnabledDeepNotes();
+            if (library.length > 0) {
+                playDeepNoteById(library[0].id);
+            }
         }
     } else if (key === 'escape') {
         if (S.UI.isNotePlaying && S.UI.isNotePlaying()) {
@@ -1919,125 +1986,109 @@ if (toggleLightingCb) toggleLightingCb.addEventListener('change', saveQoLPrefere
 setTimeout(loadQoLPreferences, 100);
 
 // ==========================================================================
-// HEARTFELT LOVE NOTE PARTICLE PLAYBACK SYSTEM
+// HEARTFELT LOVE NOTE / DEEP NOTE LIBRARY & PLAYBACK SYSTEM
 // ==========================================================================
-const LOVE_NOTE_SLIDES = [
-
-    // INTRO — gentle, personal
-    { text: "I love her", duration: 3000 },
-    { text: "but", duration: 2200 },
-    { text: "I know\nmy place.", duration: 4200 },
-
-    // PART 2 — explaining the feeling
-    { text: "I know that,\nsometimes,", duration: 3600 },
-    { text: "loving\nsomeone", duration: 3000 },
-    { text: "doesn't mean", duration: 2700 },
-    { text: "reaching for\ntheir hand.", duration: 4200 },
-
-    { text: "Sometimes\nit means", duration: 2800 },
-    { text: "admiring them\nquietly,", duration: 4000 },
-    { text: "from a\ndistance", duration: 3300 },
-    { text: "that doesn't\nmake them", duration: 3400 },
-    { text: "uncomfortable.", duration: 4600 },
-
-    // PART 3 — more serious / restrained
-    { text: "I know", duration: 2400 },
-    { text: "I cannot\ndemand", duration: 3400 },
-    { text: "her time,", duration: 2800 },
-    { text: "her attention,", duration: 3000 },
-    { text: "or a place", duration: 2800 },
-    { text: "in her\nheart.", duration: 4000 },
-
-    { text: "I cannot\nmake myself", duration: 3600 },
-    { text: "important", duration: 2800 },
-    { text: "in a story", duration: 3000 },
-    { text: "where she\nnever asked me", duration: 4000 },
-    { text: "to be a\ncharacter.", duration: 4200 },
-
-    // PART 4 — emotional pause
-    { text: "And still,", duration: 3200 },
-    { text: "I care.", duration: 4200 },
-
-    { text: "I care enough", duration: 3000 },
-    { text: "to respect", duration: 2700 },
-    { text: "her choices,", duration: 3200 },
-    { text: "even when\nthey're not", duration: 3500 },
-    { text: "the choices", duration: 2700 },
-    { text: "I hoped for.", duration: 4200 },
-
-    { text: "I care\nenough", duration: 3000 },
-    { text: "to let\nher have", duration: 3300 },
-    { text: "her own\nhappiness,", duration: 3600 },
-    { text: "even when", duration: 2800 },
-    { text: "I'm not\npart of it.", duration: 4300 },
-
-    // PART 5 — slower, reflective
-    { text: "Maybe that's", duration: 3000 },
-    { text: "the hardest\npart", duration: 3500 },
-    { text: "of loving\nsomeone:", duration: 4200 },
-
-    { text: "accepting", duration: 3000 },
-    { text: "that your\nfeelings", duration: 3500 },
-    { text: "can be\nsincere", duration: 3400 },
-    { text: "without\ngiving you", duration: 3600 },
-    { text: "ownership", duration: 3000 },
-    { text: "over their\nheart.", duration: 4400 },
-
-    // PART 6 — calm acceptance
-    { text: "So\nI'll stay", duration: 3000 },
-    { text: "where I\nbelong", duration: 3500 },
-    { text: "close\nenough", duration: 2800 },
-    { text: "to wish\nher well,", duration: 3600 },
-    { text: "far enough", duration: 3000 },
-    { text: "to let her\nbreathe.", duration: 4400 },
-
-    // PART 7 — hopeful
-    { text: "And if\none day", duration: 3200 },
-    { text: "she looks\nmy way,", duration: 3500 },
-    { text: "I'll be\ngrateful.", duration: 4300 },
-
-    { text: "If she\ndoesn't,", duration: 3300 },
-    { text: "I'll still\nbe grateful", duration: 3700 },
-    { text: "that I got\nto know", duration: 3500 },
-    { text: "what it\nfeels like", duration: 3400 },
-    { text: "to care for\nsomeone", duration: 3600 },
-    { text: "this deeply.", duration: 4400 },
-
-    // PART 8 — IMPORTANT MESSAGE
-    { text: "Because", duration: 3000 },
-    { text: "I don't need", duration: 3600 },
-    { text: "to be chosen", duration: 3200 },
-    { text: "to know", duration: 2800 },
-    { text: "that my love\nwas real.", duration: 4800 },
-
-    // PART 9 — final realization
-    { text: "I just need", duration: 3000 },
-    { text: "to make sure", duration: 3000 },
-    { text: "that while\nloving her,", duration: 3700 },
-    { text: "I never\nforget", duration: 3300 },
-    { text: "to respect\nher.", duration: 4600 },
-
-    // ENDING — slow it down
-    { text: "I love her.", duration: 4000 },
-    { text: "And that's\nenough.", duration: 5200 },
-
-    // HEART — let it breathe
-    { type: 'heart', duration: 5000 }
-
-];
-
-const playLoveNoteBtn = document.getElementById('play-love-note-btn');
 const notePlaybackPill = document.getElementById('note-playback-pill');
 const noteReturnBtn = document.getElementById('note-return-btn');
 
-function startLoveNotePlayback() {
+function getEnabledDeepNotes() {
+    const library = (typeof DEEP_NOTES !== 'undefined' && Array.isArray(DEEP_NOTES))
+        ? DEEP_NOTES
+        : ((typeof window !== 'undefined' && Array.isArray(window.DEEP_NOTES))
+            ? window.DEEP_NOTES
+            : ((typeof global !== 'undefined' && Array.isArray(global.DEEP_NOTES)) ? global.DEEP_NOTES : []));
+
+    // Filter only enabled notes with valid slides
+    return library.filter(note => note && note.enabled !== false && Array.isArray(note.slides) && note.slides.length > 0);
+}
+
+function renderDeepNotesLibrary() {
+    const container = document.getElementById('deep-notes-list');
+    if (!container) return;
+
+    const enabledNotes = getEnabledDeepNotes();
+    container.innerHTML = '';
+
+    if (enabledNotes.length === 0) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'deep-notes-empty';
+        emptyMsg.textContent = 'No deep notes currently available.';
+        container.appendChild(emptyMsg);
+        return;
+    }
+
+    enabledNotes.forEach(note => {
+        const item = document.createElement('div');
+        item.className = 'deep-note-item';
+        item.setAttribute('data-note-id', note.id);
+
+        const info = document.createElement('div');
+        info.className = 'deep-note-info';
+
+        const titleRow = document.createElement('div');
+        titleRow.className = 'deep-note-title';
+
+        const heart = document.createElement('span');
+        heart.className = 'note-heart-icon';
+        heart.textContent = '♡';
+
+        const titleText = document.createElement('span');
+        titleText.textContent = note.title || 'Untitled Note';
+
+        titleRow.appendChild(heart);
+        titleRow.appendChild(titleText);
+
+        const metaRow = document.createElement('div');
+        metaRow.className = 'deep-note-meta';
+
+        const categorySpan = document.createElement('span');
+        categorySpan.className = 'deep-note-category';
+        categorySpan.textContent = note.category ? `${note.category} · Deep Note` : 'Deep Note';
+
+        metaRow.appendChild(categorySpan);
+        info.appendChild(titleRow);
+        info.appendChild(metaRow);
+
+        const playBtn = document.createElement('button');
+        playBtn.className = 'deep-note-play-btn';
+        playBtn.setAttribute('data-note-id', note.id);
+        playBtn.setAttribute('title', `Play "${note.title || 'Note'}"`);
+        playBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13">
+                <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <span>Play</span>
+        `;
+
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            playDeepNoteById(note.id);
+        });
+
+        item.appendChild(info);
+        item.appendChild(playBtn);
+        container.appendChild(item);
+    });
+}
+
+function playDeepNoteById(noteId) {
     playClickSound();
+
+    const enabledNotes = getEnabledDeepNotes();
+    const selectedNote = enabledNotes.find(note => note.id === noteId);
+
+    if (!selectedNote || !Array.isArray(selectedNote.slides) || selectedNote.slides.length === 0) {
+        console.warn(`Deep note with ID "${noteId}" not found or has no slides.`);
+        return;
+    }
+
     toggleSettingsModal(false);
 
     document.body.classList.add('playing-love-note');
     if (notePlaybackPill) notePlaybackPill.classList.add('active');
 
-    S.UI.playNote(LOVE_NOTE_SLIDES, () => {
+    // Keep the exact playback API call: S.UI.playNote(note.slides, callback)
+    S.UI.playNote(selectedNote.slides, () => {
         document.body.classList.remove('playing-love-note');
         if (notePlaybackPill) notePlaybackPill.classList.remove('active');
     });
@@ -2050,16 +2101,12 @@ function stopLoveNotePlayback() {
     S.UI.stopNote();
 }
 
-if (playLoveNoteBtn) {
-    playLoveNoteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        startLoveNotePlayback();
-    });
-}
-
 if (noteReturnBtn) {
     noteReturnBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         stopLoveNotePlayback();
     });
 }
+
+// Initial render of deep notes library on page load
+renderDeepNotesLibrary();
