@@ -1,3 +1,92 @@
+(() => {
+    const desktopRestriction = document.getElementById('desktop-restriction');
+    const minimumViewportWidth = 1024;
+    const minimumViewportHeight = 600;
+    const minimumViewportAspectRatio = 1.35;
+    let appInitialized = false;
+    let lastEligibility = null;
+    let resumeMusicAfterAccess = false;
+    let setAppAccessEnabled = null;
+    const previousAccessibilityState = new WeakMap();
+
+    function isViewportEligible() {
+        const aspectRatio = window.innerWidth / window.innerHeight;
+        return window.innerWidth >= minimumViewportWidth &&
+            window.innerHeight >= minimumViewportHeight &&
+            aspectRatio >= minimumViewportAspectRatio;
+    }
+
+    function updateViewportEligibility() {
+        const eligible = isViewportEligible();
+        if (eligible === lastEligibility) return;
+        lastEligibility = eligible;
+        window.waitingViewportEligible = eligible;
+        document.body.classList.toggle('access-blocked', !eligible);
+
+        if (desktopRestriction) {
+            desktopRestriction.setAttribute('aria-hidden', String(eligible));
+        }
+        Array.from(document.body.children).forEach((element) => {
+            if (element !== desktopRestriction) {
+                if (!eligible) {
+                    if (!previousAccessibilityState.has(element)) {
+                        previousAccessibilityState.set(element, {
+                            inert: element.inert,
+                            ariaHidden: element.getAttribute('aria-hidden')
+                        });
+                    }
+                    element.inert = true;
+                    element.setAttribute('aria-hidden', 'true');
+                } else {
+                    const previousState = previousAccessibilityState.get(element);
+                    if (previousState) {
+                        element.inert = previousState.inert;
+                        if (previousState.ariaHidden === null) {
+                            element.removeAttribute('aria-hidden');
+                        } else {
+                            element.setAttribute('aria-hidden', previousState.ariaHidden);
+                        }
+                        previousAccessibilityState.delete(element);
+                    } else {
+                        element.inert = false;
+                    }
+                }
+            }
+        });
+
+        const audio = document.getElementById('background_music');
+        if (!eligible) {
+            resumeMusicAfterAccess = Boolean(audio && !audio.paused);
+            if (setAppAccessEnabled) setAppAccessEnabled(false);
+            if (audio) audio.pause();
+            return;
+        }
+
+        if (!appInitialized) {
+            appInitialized = true;
+            initializeWaitingApp();
+        } else if (setAppAccessEnabled) {
+            setAppAccessEnabled(true);
+        }
+
+        if (resumeMusicAfterAccess && audio) {
+            audio.play().catch(() => {});
+        }
+        resumeMusicAfterAccess = false;
+    }
+
+    window.addEventListener('resize', updateViewportEligibility, { passive: true });
+    window.addEventListener('orientationchange', updateViewportEligibility, { passive: true });
+    window.matchMedia(`(min-width: ${minimumViewportWidth}px) and (min-height: ${minimumViewportHeight}px) and (min-aspect-ratio: 27/20)`)
+        .addEventListener('change', updateViewportEligibility);
+
+    ['click', 'keydown', 'pointerdown', 'touchstart', 'input', 'change'].forEach((eventName) => {
+        document.addEventListener(eventName, (event) => {
+            if (!window.waitingViewportEligible) event.stopImmediatePropagation();
+        }, true);
+    });
+
+    function initializeWaitingApp() {
 // --- Configuration ---
 const COUNTDOWN_TARGET_DATE = new Date("2031-05-26T15:34:00+08:00");
 // Adjust this start date to when the wait actually began!
@@ -17,7 +106,7 @@ function updateDynamicLighting() {
     document.body.style.setProperty('--time-overlay', overlayColor);
 }
 updateDynamicLighting();
-setInterval(updateDynamicLighting, 60000); // Check every minute
+let dynamicLightingInterval = setInterval(updateDynamicLighting, 60000); // Check every minute
 
 // --- Interaction State ---
 window.isMouseDown = false;
@@ -185,7 +274,7 @@ function updateCountdownDisplay() {
 }
 
 updateCountdownDisplay();
-setInterval(updateCountdownDisplay, 1000);
+let countdownInterval = setInterval(updateCountdownDisplay, 1000);
 
 // Force update on tab visibility change to fix drift after backgrounding
 var fireflyAnimationControllers = new Set();
@@ -214,7 +303,7 @@ function updateProgressBar() {
     document.getElementById("progress-bar").style.width = percentage + "%";
     document.getElementById("progress-text").innerText = percentage.toFixed(4) + "%";
 }
-setInterval(updateProgressBar, 1000);
+let progressInterval = setInterval(updateProgressBar, 1000);
 updateProgressBar();
 
 // --- Milestones ---
@@ -307,7 +396,7 @@ function spawnEnvelope() {
     document.body.appendChild(item);
     setTimeout(() => { if (item.parentNode) item.remove(); }, 8000);
 }
-setInterval(spawnEnvelope, 45000); // Every 45 seconds
+let envelopeInterval = setInterval(spawnEnvelope, 45000); // Every 45 seconds
 
 // --- Interactive Fireflies ---
 function spawnFirefly() {
@@ -389,7 +478,7 @@ function spawnFirefly() {
         }
     }, 15000);
 }
-setInterval(spawnFirefly, 3000);
+let fireflyInterval = setInterval(spawnFirefly, 3000);
 
 // --- Secret Codes Menu ---
 const SECRETS = {
@@ -445,7 +534,7 @@ var S = {
     init: function () {
         S.Drawing.init('#particle-canvas');
         document.body.classList.add('body--ready');
-        S.UI.simulate("あゆに❤️|I will wait for you |untilyou say, |Are you still|waiting for me?|#countdown 3|#heart|I love you❤️|#livecountdown");
+        S.UI.simulate("あゆに❤️|I will wait\nfor you |until you say, |Are you still|waiting for me?|#countdown 3|#heart|I love you❤️|#livecountdown");
         S.Drawing.loop(function () {
             S.Shape.render();
         });
@@ -1218,6 +1307,11 @@ const MUTED_SVG = `<svg viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2
 let isAudioPlaying = false;
 
 function setAudioState(play) {
+    if (play && !window.waitingViewportEligible) {
+        isAudioPlaying = false;
+        updateAudioUI(false);
+        return;
+    }
     isAudioPlaying = play;
 
     // 1. Play / Pause Audio Element
@@ -2114,3 +2208,41 @@ if (noteReturnBtn) {
 
 // Initial render of deep notes library on page load
 renderDeepNotesLibrary();
+
+let appIntervalsPaused = false;
+setAppAccessEnabled = function (enabled) {
+    if (enabled !== appIntervalsPaused) return;
+
+    if (!enabled) {
+        clearInterval(dynamicLightingInterval);
+        clearInterval(countdownInterval);
+        clearInterval(progressInterval);
+        clearInterval(envelopeInterval);
+        clearInterval(fireflyInterval);
+        if (particleSpawnerInterval) {
+            clearInterval(particleSpawnerInterval);
+            particleSpawnerInterval = null;
+        }
+        S.Drawing.pause();
+        fireflyAnimationControllers.forEach(controller => controller.pause());
+        appIntervalsPaused = true;
+        return;
+    }
+
+    updateDynamicLighting();
+    dynamicLightingInterval = setInterval(updateDynamicLighting, 60000);
+    updateCountdownDisplay();
+    countdownInterval = setInterval(updateCountdownDisplay, 1000);
+    updateProgressBar();
+    progressInterval = setInterval(updateProgressBar, 1000);
+    updateParticleSpawner();
+    envelopeInterval = setInterval(spawnEnvelope, 45000);
+    fireflyInterval = setInterval(spawnFirefly, 3000);
+    fireflyAnimationControllers.forEach(controller => controller.resume());
+    S.Drawing.loop();
+    appIntervalsPaused = false;
+};
+    }
+
+    updateViewportEligibility();
+})();

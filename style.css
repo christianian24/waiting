@@ -1924,6 +1924,147 @@ body.autosleep-dimmed {
     animation: blinkCursor 0.8s infinite;
 }
 
+/* Desktop-only access gate. CSS protects the initial render before JavaScript runs. */
+.desktop-restriction {
+    display: none;
+}
+
+@media (max-width: 1023px), (max-height: 599px), (max-aspect-ratio: 1349/1000) {
+    body > :not(#desktop-restriction) {
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    .desktop-restriction {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        overflow: auto;
+        padding: 28px;
+        color: #fff;
+        background:
+            radial-gradient(ellipse at 50% 42%, rgba(94, 45, 104, 0.34), transparent 58%),
+            linear-gradient(145deg, #090b18 0%, #171020 55%, #0c1020 100%);
+        font-family: 'Quicksand', sans-serif;
+        text-align: center;
+        visibility: visible !important;
+        pointer-events: auto;
+    }
+
+    .desktop-restriction::before,
+    .desktop-restriction::after {
+        position: absolute;
+        content: '';
+        width: min(52vw, 460px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        filter: blur(90px);
+        opacity: 0.16;
+        pointer-events: none;
+        animation: restrictionGlow 9s ease-in-out infinite alternate;
+    }
+
+    .desktop-restriction::before {
+        top: -28%;
+        left: -15%;
+        background: #d946a8;
+    }
+
+    .desktop-restriction::after {
+        right: -18%;
+        bottom: -35%;
+        background: #8657db;
+        animation-delay: -4s;
+    }
+
+    .desktop-restriction-panel {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 590px);
+        box-sizing: border-box;
+        padding: clamp(30px, 6vw, 54px);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 28px;
+        background: rgba(20, 18, 34, 0.62);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        -webkit-backdrop-filter: blur(22px);
+        backdrop-filter: blur(22px);
+        animation: restrictionArrive 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    .desktop-restriction-icon {
+        display: grid;
+        width: 78px;
+        height: 78px;
+        margin: 0 auto 22px;
+        place-items: center;
+        border: 1px solid rgba(255, 178, 222, 0.32);
+        border-radius: 24px;
+        background: rgba(227, 96, 175, 0.1);
+        box-shadow: 0 0 38px rgba(217, 70, 168, 0.14);
+        color: #ffc1e2;
+    }
+
+    .desktop-restriction-icon svg {
+        width: 48px;
+        height: 48px;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2;
+    }
+
+    .desktop-restriction-label {
+        margin: 0 0 12px;
+        color: #f2a9d2;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .desktop-restriction-panel h1 {
+        margin: 0 auto 16px;
+        max-width: 470px;
+        font-family: 'Plus Jakarta Sans', 'Quicksand', sans-serif;
+        font-size: clamp(1.65rem, 5vw, 2.35rem);
+        font-weight: 600;
+        letter-spacing: -0.04em;
+        line-height: 1.2;
+    }
+
+    .desktop-restriction-copy {
+        max-width: 450px;
+        margin: 0 auto;
+        color: rgba(255, 255, 255, 0.74);
+        font-size: clamp(0.92rem, 2.5vw, 1.02rem);
+        line-height: 1.8;
+        letter-spacing: 0.02em;
+    }
+}
+
+@keyframes restrictionArrive {
+    from { opacity: 0; transform: translateY(12px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes restrictionGlow {
+    from { transform: scale(0.92); opacity: 0.12; }
+    to { transform: scale(1.08); opacity: 0.2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .desktop-restriction::before,
+    .desktop-restriction::after,
+    .desktop-restriction-panel {
+        animation: none;
+    }
+}
+
 @keyframes blinkCursor {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }

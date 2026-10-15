@@ -1,121 +1,102 @@
-# I’ll Be Here. 💖
+# I’ll Be Here
 
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+“I’ll Be Here” is a romantic, single-page countdown and waiting experience. It combines a configurable countdown with music, animated visuals, settings, and written love notes. The project is a static HTML, CSS, and JavaScript site; it has no backend or package installation step.
 
-A sentimental, interactive single-page website featuring a personalized countdown timer, high-precision progress tracking, and immersive particle animations. This project is a dedicated digital space for keeping a promise and counting down to a significant life event.
+## Features
 
----
+- Countdown to the configured target date, or count-up from the configured wait start date.
+- Standard years/days/hours/minutes/seconds display, with total days, seconds, weeks, or hours modes.
+- Progress bar, milestone markers, and an optional completion percentage badge.
+- Background music controls, volume adjustment, browser autoplay handling, and a first-interaction playback prompt.
+- Settings for timer direction and format, color theme, font, blur, particle density and speed, lighting, and other display preferences.
+- A canvas particle effect that animates text and heart shapes, plus decorative falling particles, fireflies, click sparkles, and parallax background movement.
+- Love memos and a static deep-note library with timed text and heart slides.
+- Avatar messages, a long-press crystal effect, a time capsule interaction, secret keyboard codes, and shortcut controls.
+- Zen mode, fullscreen, an inactivity dimming option, and a compact display mode.
+- Browser-local persistence for preferences through `localStorage`.
 
-## ✨ Features
+## Desktop and laptop access
 
-- **🎯 Precise Countdown**: A robust timer tracking time elapsed or remaining until a specific target date with second-level accuracy.
-- **📈 Progress Visualization**: A high-precision progress bar (four decimal places) providing real-time feedback on the "wait progress."
-- **✨ Interactive Canvas Particles**: A custom-built particle engine that reacts to mouse movement and touch interaction, creating a mesmerizing backdrop.
-- **🎵 Glassmorphism Audio Interface**: Custom-designed audio controls with smooth volume adjustment and playback persistence across sessions.
-- **🐾 Animated Avatar**: An interactive Peach & Goma avatar with dynamic typing speech bubbles and engagement triggers.
-- **🌙 Dynamic Lighting**: Automatic UI color shifts based on the time of day (Sunrise, Sunset, and Night modes).
-- **🎁 Secret Easter Eggs**: Hidden interactions including a "Time Capsule" lock and secret keyboard commands.
+The app is available only when all three viewport requirements are met:
 
----
+- Width is at least `1024` CSS pixels.
+- Height is at least `600` CSS pixels.
+- Width divided by height is at least `1.35`.
 
-## 📸 Screenshots
+If any requirement is not met, the desktop restriction notice appears and the application interface is hidden and disabled. The app delays normal initialization until the viewport is eligible. When an already-running page becomes ineligible, its main recurring timers, particle spawner, canvas drawing loop, and firefly animations are paused, and background music is paused. If music was playing when access was blocked, it is resumed when the viewport becomes eligible again. Resizing and orientation changes are checked without requiring a reload.
 
-![Main Interface](img/Screenshot%202026-04-23%20181210.png)
-*The modern glassmorphism interface with active countdown and particle background.*
+| Viewport | Aspect ratio | Expected result |
+| --- | ---: | --- |
+| `390 × 844` | 0.46 | Blocked |
+| `768 × 1024` | 0.75 | Blocked |
+| `1024 × 768` | 1.33 | Blocked |
+| `1280 × 800` | 1.60 | Allowed |
+| `1366 × 768` | 1.78 | Allowed |
+| `1920 × 1080` | 1.78 | Allowed |
+| `900 × 700` | 1.29 | Blocked |
+| `1200 × 900` | 1.33 | Blocked |
 
----
+The restriction is based on viewport dimensions and ratio, not user-agent detection. It is a client-side presentation gate, not a security boundary.
 
-## 🚀 Getting Started
+### Restriction screen
 
-No installation or dependencies are required. This is a standalone project that runs directly in any modern web browser.
+The notice is implemented in the page and styled with a dark navy and purple gradient, soft pink and violet glow effects, and a translucent glass-style panel. It includes a monitor-and-heart icon, the title “This Little World Is Made for a Bigger Screen,” and the label “Laptop or desktop required.” Its short entrance and glow animations are disabled when the visitor requests reduced motion.
 
-### How to Run
-1. Clone or download the project files.
-2. Locate `index.html` in the root directory.
-3. **Double-click `index.html`** or drag it into your browser (Chrome, Edge, Safari, etc.).
-4. Press **F5** or Refresh to reload if needed.
+## Run locally
 
----
+No package manager, framework, build step, or server is required.
 
-## 📖 Usage
+1. Download or clone the project.
+2. Open `index.html` directly in a modern browser.
+3. Use a viewport that meets the desktop and laptop access requirements above.
 
-### Interaction Guide
-- **Audio Controls**: Hover over the top-right button to reveal the volume slider. Click to toggle background atmosphere.
-- **Avatar Interactions**: Click on the avatar to receive randomized supportive messages. Long-press (3s) to trigger a special visual effect.
-- **Time Capsule**: Located in the bottom-right. It remains locked until the target date is reached.
-- **Secrets**: Try typing specific keywords like (`*****` it's a secret lol) or `imissyou` anywhere on the page to unlock hidden animations.
+Browser audio policies may prevent music from starting automatically. If playback is blocked, use the audio control or interact with the page to enable playback. The site also uses remote font and image URLs, which may not load without an internet connection.
 
-### Desktop & Mobile
-The project is fully responsive and supports both mouse pointer movement and touch gestures for particle interaction.
+## Configuration
 
----
-
-## ⚙️ Configuration
-
-You can personalize the countdown by modifying the configuration constants in `script.js`:
+The countdown dates are constants near the top of `script.js`:
 
 ```javascript
-// --- Configuration in script.js ---
 const COUNTDOWN_TARGET_DATE = new Date("2031-05-26T15:34:00+08:00");
 const WAIT_START_DATE = new Date("2024-05-26T00:00:00+08:00");
 ```
 
-- **`COUNTDOWN_TARGET_DATE`**: The date you are waiting for.
-- **`WAIT_START_DATE`**: The date the promise or journey began.
+- `COUNTDOWN_TARGET_DATE` sets the countdown destination.
+- `WAIT_START_DATE` sets the start used by count-up and progress calculations.
 
----
-
-## 📂 Folder Structure
+## Project structure
 
 ```text
-waiting/
-├── .testsprite/          # TestSprite configuration
-├── img/                  # Static image assets
-├── mp3/                  # Background music files
-├── testsprite_tests/     # Automated test reports and plans
-├── index.html            # Main entry point
-├── script.js             # Core application logic & particle engine
-├── style.css             # Glassmorphism design system
-├── package.json          # Dependencies and scripts
-└── README.md             # Project documentation
+waiting-main/
+├── .vscode/
+│   ├── launch.json          # VS Code launch configuration
+│   └── settings.json        # VS Code workspace settings
+├── img/
+│   ├── 1.jpg                # Local page background image
+│   └── Screenshot 2026-04-23 181210.png # Project screenshot used in this README
+├── mp3/
+│   └── Grand_Escape.mp3     # Local background music
+├── index.html               # Page structure, interface, restriction notice, and asset references
+├── style.css                # Application and restriction-screen styling
+├── script.js                # Countdown, settings, persistence, interactions, and animation logic
+├── deepNotes.js             # Static love-note content and timed slides
+├── LICENSE                  # ISC license
+└── README.md                # Project documentation
 ```
 
----
+The browser loads `deepNotes.js` before `script.js`, so the note data is available to the application. There is no `package.json`, lockfile, backend, database, or automated test configuration in the project structure.
 
-## 🧪 Testing
+## Preferences and browser behavior
 
-This project can be manually verified by opening the page and interacting with the UI. For automated quality assurance, it is pre-configured for **TestSprite MCP**.
+- Settings are stored in browser `localStorage` under the key `user_qol_prefs`. They remain local to that browser profile; the project has no account or server-side synchronization.
+- The bundled music file is `mp3/Grand_Escape.mp3`. Playback depends on browser autoplay policy and may require a user gesture.
+- The restriction notice is shown by a CSS media query as well as the JavaScript lifecycle gate. JavaScript checks viewport size and ratio on resize and orientation changes, then pauses or resumes the app's recurring visual activity as appropriate.
+- The site uses remote Google Fonts and remote URLs for the favicon and snapshot avatar in addition to local image and audio assets.
 
-### Run Automated Tests
-If you wish to run the automated test suite, ensure you have Node.js installed and run:
-```bash
-npx @testsprite/testsprite-mcp@latest generateCodeAndExecute
-```
+## Screenshot
 
----
+![Main interface](img/Screenshot%202026-04-23%20181210.png)
 
-## 🤝 Contributing
+## License
 
-Contributions are welcome to enhance the visual effects or optimize the particle engine.
-1. Fork the Project.
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the Branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
-
----
-
-## 📜 License
-
-Distributed under the **ISC License**. See `LICENSE` for more information.
-
----
-
-## 💖 Acknowledgments
-
-- **Peach & Goma**: For the adorable animated assets.
-- **Vite**: For the blazing fast development experience.
-- **TestSprite**: For ensuring the reliability of the countdown logic.
-
----
-*Created with love and a promise. Stay strong. ♡*
+This project is distributed under the ISC License. See [LICENSE](LICENSE).

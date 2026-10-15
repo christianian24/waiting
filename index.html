@@ -10,6 +10,21 @@
 </head>
 
 <body>
+    <section id="desktop-restriction" class="desktop-restriction" role="status" aria-labelledby="desktop-restriction-title" aria-hidden="false">
+        <div class="desktop-restriction-panel">
+            <div class="desktop-restriction-icon" aria-hidden="true">
+                <svg viewBox="0 0 64 64" fill="none">
+                    <rect x="8" y="10" width="48" height="34" rx="4" />
+                    <path d="M4 52h56M24 44l-2 8m18-8 2 8" />
+                    <path d="M22 27c0-4 3-7 7-7 3 0 5 2 6 4 1-2 3-4 6-4 4 0 7 3 7 7 0 6-13 14-13 14S22 33 22 27Z" />
+                </svg>
+            </div>
+            <p class="desktop-restriction-label">Laptop or desktop required.</p>
+            <h1 id="desktop-restriction-title">This Little World Is Made for a Bigger Screen</h1>
+            <p class="desktop-restriction-copy">I want you to experience every little detail the way it was meant to be seen. Please open this page on a laptop or PC to continue.</p>
+        </div>
+    </section>
+
     <!--Audio Controls-->
     <div class="audio-container">
         <button id="audio-btn" class="audio-controls" title="Toggle Music" aria-label="Toggle Music">
@@ -527,7 +542,7 @@
     </div>
 
     <!--Audio-->
-    <audio loop="loop" autoplay="autoplay" id="background_music">
+    <audio loop="loop" preload="none" id="background_music">
         <source src="mp3/Grand_Escape.mp3" type="audio/mpeg" />
     </audio>
 
